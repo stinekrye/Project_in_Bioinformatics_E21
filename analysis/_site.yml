@@ -1,7 +1,7 @@
-name: "Project_in_Bioinformatics_E21"
+name: Project_in_Bioinformatics_E21
 output_dir: ../docs
 navbar:
-  title: "Project_in_Bioinformatics_E21"
+  title: Project_in_Bioinformatics_E21
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/stinekrye/Project_in_Bioinformatics_E21
 output:
   workflowr::wflow_html:
     toc: yes

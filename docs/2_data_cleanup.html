@@ -476,16 +476,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree1d869e72ca9b0ff1f22f35ced1d09c4f99468361targetblank1d869e7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/1d869e72ca9b0ff1f22f35ced1d09c4f99468361" target="_blank">1d869e7</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree57b4105ac7e2f8e8b83b0ab0c7719591fe51da70targetblank57b4105a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/57b4105ac7e2f8e8b83b0ab0c7719591fe51da70" target="_blank">57b4105</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree1d869e72ca9b0ff1f22f35ced1d09c4f99468361targetblank1d869e7a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree57b4105ac7e2f8e8b83b0ab0c7719591fe51da70targetblank57b4105a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/1d869e72ca9b0ff1f22f35ced1d09c4f99468361" target="_blank">1d869e7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/57b4105ac7e2f8e8b83b0ab0c7719591fe51da70" target="_blank">57b4105</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -498,9 +498,6 @@ Untracked files:
     Untracked:  data/1_taxa.species.rds
     Untracked:  data/2_GFcutR.Rdata
     Untracked:  data/2_seqtab.nochim.identifier.Rdata
-
-Unstaged changes:
-    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -544,6 +541,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/blob/57b4105ac7e2f8e8b83b0ab0c7719591fe51da70/analysis/2_data_cleanup.Rmd" target="_blank">57b4105</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-09-19
+</td>
+<td>
+test2
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stinekrye/Project_in_Bioinformatics_E21/6a4163299dd75e56669f64911da1bdf645e933f9/docs/2_data_cleanup.html" target="_blank">6a41632</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-09-19
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/blob/1d869e72ca9b0ff1f22f35ced1d09c4f99468361/analysis/2_data_cleanup.Rmd" target="_blank">1d869e7</a>
 </td>
 <td>
@@ -573,41 +604,24 @@ test
 </ol>
 <pre class="r"><code>library(readxl)
 library(tidyverse)</code></pre>
-<pre><code>-- Attaching packages --------------------------------------- tidyverse 1.3.1 --</code></pre>
-<pre><code>v ggplot2 3.3.5     v purrr   0.3.4
-v tibble  3.1.4     v dplyr   1.0.7
-v tidyr   1.1.3     v stringr 1.4.0
-v readr   2.0.1     v forcats 0.5.1</code></pre>
-<pre><code>-- Conflicts ------------------------------------------ tidyverse_conflicts() --
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
 <p>Import data</p>
-<pre class="r"><code>excel &lt;- read_excel(&quot;./data/1_sampleData.xlsx&quot;, sheet = &quot;link to R data&quot;)</code></pre>
-<pre><code>New names:
-* `` -&gt; ...6
-* `` -&gt; ...7</code></pre>
-<pre class="r"><code>excel &lt;- subset(excel, select = c(&quot;Name in R file&quot;,&quot;ini_month_id&quot;))
+<pre class="r"><code>excel &lt;- read_excel(&quot;./data/1_sampleData.xlsx&quot;, sheet = &quot;link to R data&quot;)
+excel &lt;- subset(excel, select = c(&quot;Name in R file&quot;,&quot;ini_month_id&quot;))
 rdata &lt;- load(&quot;./data/1_seqtab.nochim.OverlapRemoved.rds&quot;)
 taxa &lt;- load(&quot;./data/1_taxa.species.rds&quot;)</code></pre>
 </div>
-<div id="rename-to-asv-names" class="section level1">
-<h1>1 Rename to ASV# names</h1>
-<div id="check-if-the-order-of-sequences-is-consistent" class="section level2">
-<h2>Check if the order of sequences is consistent</h2>
+<div id="rename-to-asv-names" class="section level2">
+<h2>1 Rename to ASV# names</h2>
+<p>Check if the order of sequences is consistent</p>
 <pre class="r"><code>rownames(taxa.species)[1000] == colnames(seqtab.nochim)[1000] # Yes it is</code></pre>
 <pre><code>[1] TRUE</code></pre>
-</div>
-<div id="rename" class="section level2">
-<h2>Rename</h2>
+<p>Rename</p>
 <pre class="r"><code>rownames(taxa.species) &lt;- paste(&quot;ASV&quot;,seq(1:nrow(taxa.species)),sep=&quot;&quot;)
 colnames(seqtab.nochim) &lt;- paste(&quot;ASV&quot;,seq(1:nrow(taxa.species)),sep=&quot;&quot;)</code></pre>
 </div>
-</div>
-<div id="merge" class="section level1">
-<h1>2 Merge</h1>
-</div>
-<div id="merge-and-save-new-r-file" class="section level1">
-<h1>Merge and save new R file</h1>
+<div id="merge-excel-and-r-file" class="section level2">
+<h2>2 Merge excel and R file</h2>
+<p>Merge and save new R file</p>
 <pre class="r"><code>r &lt;- as.data.frame(seqtab.nochim)
 r1 &lt;- rownames_to_column(r, var = &quot;sample_name&quot;)
 test &lt;- merge(r1, excel, by.x = &quot;sample_name&quot;, by.y = &quot;Name in R file&quot;)
@@ -615,24 +629,20 @@ test2 &lt;- column_to_rownames(test, &quot;ini_month_id&quot;)
 seqtab.nochim.identifier &lt;- test2
 #save(seqtab.nochim.identifier, file = &quot;seqtab.nochim.identifier.Rdata&quot; )</code></pre>
 </div>
-<div id="cut-out-the-part-of-the-data-with-location-gf" class="section level1">
-<h1>3 Cut out the part of the data with location = GF</h1>
-<div id="load-data" class="section level2">
-<h2>Load data</h2>
+<div id="cut-out-the-part-of-the-data-with-location-gf" class="section level2">
+<h2>3 Cut out the part of the data with location = GF</h2>
+<p>Load data</p>
 <pre class="r"><code>Rdata &lt;- seqtab.nochim.identifier
 ExcelGF &lt;- read_excel(&quot;./data/1_sampleData.xlsx&quot;, sheet = &quot;GF data&quot;)</code></pre>
-</div>
-</div>
-<div id="cut-data" class="section level1">
-<h1>Cut data</h1>
+<p>Cut data</p>
 <pre class="r"><code>cut &lt;- seqtab.nochim.identifier[rownames(seqtab.nochim.identifier) %in% ExcelGF$ini_month_id,]
 test1 &lt;- rownames(cut) # length = 138
 test2 &lt;- ExcelGF$ini_month_id # length = 139. This is one longer than test 1. But why?
 GFcutR &lt;- cut
 #save(GFcutR, file = &quot;GFcutR.Rdata&quot;)</code></pre>
 </div>
-<div id="missing-datapoint" class="section level1">
-<h1>Missing datapoint</h1>
+<div id="missing-datapoint" class="section level2">
+<h2>4 Missing datapoint</h2>
 <p>The missing datapoint is</p>
 <pre class="r"><code>test2[!test2 %in% test1] # Find what is in test2, which is not in test1. (What is inside the brackets returns a boolean vector which is true if a datapoint in test2 IS NOT in test 1. Thus we cut out the missing datapoint from the test 2 matrix.)</code></pre>
 <pre><code>[1] &quot;FG.july.142&quot;</code></pre>

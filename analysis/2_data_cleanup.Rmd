@@ -17,7 +17,7 @@ The purpose of this script is:
   This script won't save any files unless the # is removed before the save commands
   
 
-```{r}
+```{r, message=FALSE}
 library(readxl)
 library(tidyverse)
 ```
@@ -25,27 +25,28 @@ library(tidyverse)
 
 Import data
 
-```{r}
+```{r, message = FALSE}
 excel <- read_excel("./data/1_sampleData.xlsx", sheet = "link to R data")
 excel <- subset(excel, select = c("Name in R file","ini_month_id"))
 rdata <- load("./data/1_seqtab.nochim.OverlapRemoved.rds")
 taxa <- load("./data/1_taxa.species.rds")
 ```
-# 1 Rename to ASV# names
-## Check if the order of sequences is consistent
+## 1 Rename to ASV# names
+Check if the order of sequences is consistent
 
 ```{r}
 rownames(taxa.species)[1000] == colnames(seqtab.nochim)[1000] # Yes it is
 ``` 
-## Rename
+
+Rename
 
 ```{r}
 rownames(taxa.species) <- paste("ASV",seq(1:nrow(taxa.species)),sep="")
 colnames(seqtab.nochim) <- paste("ASV",seq(1:nrow(taxa.species)),sep="")
 ```
 
-# 2 Merge
-# Merge and save new R file
+## 2 Merge excel and R file
+Merge and save new R file
 
 ```{r}
 r <- as.data.frame(seqtab.nochim)
@@ -56,15 +57,15 @@ seqtab.nochim.identifier <- test2
 #save(seqtab.nochim.identifier, file = "seqtab.nochim.identifier.Rdata" )
 ```
 
-# 3 Cut out the part of the data with location = GF
+## 3 Cut out the part of the data with location = GF
 
-## Load data
+Load data
 ```{r}
 Rdata <- seqtab.nochim.identifier
 ExcelGF <- read_excel("./data/1_sampleData.xlsx", sheet = "GF data")
 ```
 
-# Cut data
+Cut data
 ```{r}
 cut <- seqtab.nochim.identifier[rownames(seqtab.nochim.identifier) %in% ExcelGF$ini_month_id,]
 test1 <- rownames(cut) # length = 138
@@ -73,7 +74,7 @@ GFcutR <- cut
 #save(GFcutR, file = "GFcutR.Rdata")
 ```
 
-# Missing datapoint
+## 4 Missing datapoint
 The missing datapoint is
 ```{r}
 test2[!test2 %in% test1] # Find what is in test2, which is not in test1. (What is inside the brackets returns a boolean vector which is true if a datapoint in test2 IS NOT in test 1. Thus we cut out the missing datapoint from the test 2 matrix.)

@@ -11,4 +11,4 @@ editor_options:
 Welcome to my research website.
 
 ### Index
-#### Data clean up: [link](2_data_cleanup.html)
+#### Data clean up: [here](2_data_cleanup.html)

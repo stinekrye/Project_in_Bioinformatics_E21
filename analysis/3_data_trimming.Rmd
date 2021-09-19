@@ -1,0 +1,100 @@
+---
+title: "3_data_trimming"
+author: "stinekrye"
+date: "2021-09-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+1 The purpose of this script is first to make some visualizations about the variation and distribution of the data.
+2 Secondly phyloseq is used to trim the data
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+```{r} 
+#These paths are relative to the working file
+load("./data/2 GFcutR.Rdata")
+ExcelGF <- read_excel("./data/1 sampleData.xlsx", sheet = "GF data")
+ExcelGF <- select(ExcelGF, -c("depth", "pressure_mpa", "nutrient", "free_living_biofilm", "phosphate", "nitrate", "nitrite", "dic", "stdevdic")) #drop empty columns
+GFcutR <- select(GFcutR, -c("sample_name"))
+```
+Remove empty rows + cols
+```{r}
+(dim(GFcutR))
+GFcutR <- GFcutR[,colSums(GFcutR) > 0]
+(dim(GFcutR))
+view(GFcutR[rowSums(GFcutR) < 1,])
+GFcutR <- GFcutR[rowSums(GFcutR) > 0,]
+(dim(GFcutR))
+#save(GFcutR, file = "GFcutR.rds")
+
+```
+
+
+# 1 Investigate distributions and variation
+
+Investigate number of reads
+```{r}
+rowname <- rownames(GFcutR)
+test <- GFcutR %>%
+  mutate(rowsums = rowSums(.))
+rownames(test) = rowname
+```
+
+
+```{r}
+test %>% ggplot(mapping = aes(x = reorder(rownames(.), -rowsums), y = rowsums)) +
+  geom_bar(stat = "identity") +
+  xlab("ini_id_month (not ordered by this id)")+
+  ylab("Read count") +
+  theme_classic() +
+  theme(axis.text.x=element_blank())
+```
+# 3 Calculate the coefficient of variation of the columns / make plot of # asv as a function of abundance
+
+```{r}
+GFcolMeans <- colMeans(GFcutR)
+GFstdev <- sapply(GFcutR,sd)
+GFcv <- GFstdev/(1+GFcolMeans) #add one to prevent that the numbers fall below 1!!!
+```
+
+```{r}
+GFcvDf <- as.data.frame(sort(GFcv))
+GFcvDf %>% 
+  ggplot(mapping = aes(x = reorder(rownames(.), -GFcv), y = GFcv)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_blank())+
+  xlab("ASV#")+
+  ylab("CV") + # Coefficient of variation (stdev/mean)
+  theme_classic() +
+  theme(axis.text.x=element_blank())
+```
+# CLEAN UP USING PHYLO SEQ
+
+
+
+
+How does ot affect the data to remove the columns with low count?
+- It removes a lot of the ASVs with high CV.
+- How can we understand CV here? It is the columns with high variation compared to mean. 
+    - We are not interested in the ASV with high CV AND low count
+    - But we might be interested in the ASVs with high CV and higher count
+
+
+
+
+Next:
+Use sample name to compare samples (GFcutRwName)
+
+
+Notes
+- 1 We miss FG.142.July
+- How much can I cut before it gets significant?
+- How can we get wround 60.000 reads in one sample?
+

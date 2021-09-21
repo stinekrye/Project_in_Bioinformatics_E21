@@ -47,25 +47,25 @@ I follow this tutorial:
 https://joey711.github.io/phyloseq/preprocess.html#preprocessing
 
 ```{r}
-
-
 # Filter data based on read count
 gfData1 <- filter_taxa(gfData, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
 
-# Remove empty columns and rows, which might have emerged based on the removal of taxa
+# Remove empty columns and rows, which might have emerged based on the removal of taxa 
 gfData2 <- filter_taxa(gfData1, function(x) mean(x) > 0, TRUE) # cols
-GF <- prune_samples(sample_sums(gfData2)>0, gfData2) # rows
+gfData3 <- prune_samples(sample_sums(gfData2)>0, gfData2) # rows
 
 # Then transform data
 gfData4 <- transform_sample_counts(gfData3, function(OTU) OTU / sum(OTU) ) # Transformation of data, so they are relative to the read counts
-which(rowSums(otu_table(gfData4)) == 0)
-which(colSums(otu_table(gfData4)) == 0)
-sum(is.na(otu_table(gfData4)))
+
+# Test that the matrix really has no empty cols/rows/any NaNs
+#which(rowSums(otu_table(gfData4)) == 0)
+#which(colSums(otu_table(gfData4)) == 0)
+#sum(is.na(otu_table(gfData4)))
 
 # Then filter taxa based on column mean
-#GF <- filter_taxa(gfData4, function(x) mean(x) < 1e-5, TRUE) # Can also be done
+GF <- filter_taxa(gfData4, function(x)  mean(x) < 1e-5, TRUE) # Can also be done
 
-#GF <- gfData4
+GF <- gfData4
 ```
 
 We end up with 133 samples and 373 taxa!
@@ -75,9 +75,6 @@ Graphical summary
 test <- subset_samples(GF, type == "SW")
 ```
 
-```{r}
-sample_variables(test)
-```
 
 
 ```{r}
@@ -85,8 +82,6 @@ theme_set(theme_bw())
 p <- plot_bar(test, "location", fill = "Class") 
 p + geom_bar(aes(color = Class, fill = Class), stat = "Identity") #, position = "stack"
 ```
-Questions:
-- the abundance is for the sample numbers. This should be an ASV scale!
 
 
 
@@ -99,3 +94,4 @@ Questions:
 - Relative abundance?
 - Are we interested in kowing the empty samples?
 - Why is GF <- filter_taxa(gfData4, function(x) mean(x) < 1e-5, TRUE) not working?
+- the abundance is for the sample numbers. This should be an ASV scale!

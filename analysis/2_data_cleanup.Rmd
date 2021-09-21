@@ -54,9 +54,18 @@ r1 <- rownames_to_column(r, var = "sample_name")
 test <- merge(r1, excel, by.x = "sample_name", by.y = "Name in R file")
 test2 <- column_to_rownames(test, "ini_month_id")
 seqtab.nochim.identifier <- test2
-#save(seqtab.nochim.identifier, file = "seqtab.nochim.identifier.Rdata" )
-save(taxa.species, file = "2_taxa.species.rds")
+
+#save(taxa.species, file = "2_taxa.species.rds")
 ```
+
+
+Rename AG.feb.X to FG.july.142X, and delete FG.july.142
+```{r}
+reNameIdx <- match("AG.feb.X", rownames(seqtab.nochim.identifier))
+rownames(seqtab.nochim.identifier)[reNameIdx] <- "FG.july.142"
+save(seqtab.nochim.identifier, file = "2_seqtab.nochim.identifier.Rdata" )
+```
+
 
 ## 3 Cut out the part of the data with location = GF
 

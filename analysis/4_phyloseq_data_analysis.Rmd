@@ -1,0 +1,29 @@
+---
+title: "4_phyloseq_data_analysis1"
+author: "stinekrye"
+date: "2021-09-21"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+load("./data/2_seqtab.nochim.identifier.Rdata")
+load("./data/2_taxa.species.rds")
+sampleData <- read_excel("./data/1_sampleData.xlsx")
+sampleData <- column_to_rownames(sampleData, "ini_month_id")
+seqtab.nochim <- select(seqtab.nochim.identifier, -c("sample_name"))
+```
+
+
+Create phyloseq object
+```{r}
+asvTable <- otu_table(seqtab.nochim, taxa_are_rows = FALSE)
+sampleData <- sample_data(sampleData)
+taxoTable <- tax_table(taxa.species)
+phyloData <- phyloseq(asvTable,sampleData, taxoTable)
+
+```
+

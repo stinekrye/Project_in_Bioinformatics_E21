@@ -55,6 +55,7 @@ test <- merge(r1, excel, by.x = "sample_name", by.y = "Name in R file")
 test2 <- column_to_rownames(test, "ini_month_id")
 seqtab.nochim.identifier <- test2
 #save(seqtab.nochim.identifier, file = "seqtab.nochim.identifier.Rdata" )
+save(taxa.species, file = "2_taxa.species.rds")
 ```
 
 ## 3 Cut out the part of the data with location = GF

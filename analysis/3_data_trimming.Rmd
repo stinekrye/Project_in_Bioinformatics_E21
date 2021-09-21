@@ -19,8 +19,8 @@ library(readxl)
 
 ```{r} 
 #These paths are relative to the working file
-load("./data/2 GFcutR.Rdata")
-ExcelGF <- read_excel("./data/1 sampleData.xlsx", sheet = "GF data")
+load("./data/2_GFcutR.Rdata")
+ExcelGF <- read_excel("./data/1_sampleData.xlsx", sheet = "GF data")
 ExcelGF <- select(ExcelGF, -c("depth", "pressure_mpa", "nutrient", "free_living_biofilm", "phosphate", "nitrate", "nitrite", "dic", "stdevdic")) #drop empty columns
 GFcutR <- select(GFcutR, -c("sample_name"))
 ```
@@ -76,6 +76,10 @@ GFcvDf %>%
   theme(axis.text.x=element_blank())
 ```
 # CLEAN UP USING PHYLO SEQ
+
+
+
+
 
 
 

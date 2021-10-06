@@ -62,7 +62,7 @@ taxo <- taxo %>% select(c(taxonomy))                                            
 rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
 #write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
-head(rhea_GF_asvTable)
+head(rhea_GF_asvTable)[123:128]
 ```
 
 
@@ -94,7 +94,7 @@ labelCutoff <- 10
   
   
 Use the slope of the rarefaction curve to decide cut-off  
-- How do you do this?  
+- ** How do you do this? **  
 - My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
 
 ```{r}
@@ -156,7 +156,8 @@ labelCutoff <- 5
 #source("../code/Rhea-master/1.Normalization/Normalization.R")
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
-
+  
+The output file with normalized read counts is used in the next step
 
 
 
@@ -201,18 +202,19 @@ alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = Evenness)) +
   facet_wrap("type")
 ```
+  
 > How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used? 
 
 When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?
+  
+* Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
 
-** Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
-
-Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate **
+Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *
 
 
 #### Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers
 The y axis is log scale. This seperates the points better.
-
+  
 > Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?
 
 ```{r}
@@ -224,4 +226,5 @@ alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) +
   NULL
 ```
 
+  
 > Maybe do the same with phyloseq?

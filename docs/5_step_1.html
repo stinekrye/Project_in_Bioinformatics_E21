@@ -508,16 +508,16 @@ C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treeae8a430b0838781466d1e421eb03955f775bdc05targetblankae8a430a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/ae8a430b0838781466d1e421eb03955f775bdc05" target="_blank">ae8a430</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree09a18b1ef2a8faac82680460ecf9dea95c944f5etargetblank09a18b1a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/09a18b1ef2a8faac82680460ecf9dea95c944f5e" target="_blank">09a18b1</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treeae8a430b0838781466d1e421eb03955f775bdc05targetblankae8a430a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree09a18b1ef2a8faac82680460ecf9dea95c944f5etargetblank09a18b1a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/ae8a430b0838781466d1e421eb03955f775bdc05" target="_blank">ae8a430</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/09a18b1ef2a8faac82680460ecf9dea95c944f5e" target="_blank">09a18b1</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -531,6 +531,7 @@ Ignored files:
 Untracked files:
     Untracked:  code/Rhea-master/
     Untracked:  data/get_seq.r
+    Untracked:  oil_ASVtable_RHEA_CUT.txt
     Untracked:  oil_spill.nwk
     Untracked:  treemaker.sh
 
@@ -571,6 +572,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/blob/09a18b1ef2a8faac82680460ecf9dea95c944f5e/analysis/5_step_1.Rmd" target="_blank">09a18b1</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+wflow_publish(“analysis/5_step_1.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stinekrye/Project_in_Bioinformatics_E21/fec4b0393e0e42efbdcec3c008ef49e5d8c1ff61/docs/5_step_1.html" target="_blank">fec4b03</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -665,7 +700,12 @@ clean-up of old files
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>The purpose of this script is to illustrate the workflow of how to produce/explore the following: - 2.3.2.1: Remove singletons, unwanted sequences and negative controls - 2.3.2.2: Normalize data - Rarefaction curves - 2.3.2.3: Filtering of sequences and samples - 2.3.3: Alpha diversity (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).</p>
+<p>The purpose of this script is to illustrate the workflow of how to produce/explore the following:<br />
+- 2.3.2.1: Remove singletons, unwanted sequences and negative controls<br />
+- 2.3.2.2: Normalize data<br />
+- Rarefaction curves<br />
+- 2.3.2.3: Filtering of sequences and samples<br />
+- 2.3.3: Alpha diversity (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).</p>
 <div id="load-data-and-libraries" class="section level3">
 <h3>Load data and libraries</h3>
 <pre class="r"><code>library(tidyverse)</code></pre>

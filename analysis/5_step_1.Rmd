@@ -62,7 +62,7 @@ taxo <- taxo %>% select(c(taxonomy))                                            
 rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
 #write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
-head(rhea_GF_asvTable)[123:128]
+head(rhea_GF_asvTable)[137:140]
 ```
 
 

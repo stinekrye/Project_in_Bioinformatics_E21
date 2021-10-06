@@ -22,16 +22,14 @@ The purpose of this script is to illustrate the workflow of how to produce/explo
 
 ```{r}
 library(tidyverse)
-#library(Rhea)
 library(readxl)
 library(phyloseq)
 library(vegan)
-library(magick)
-library(pdftools)
 
-sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
-asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
-taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+
+sampleData <- read_excel("../data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("../data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("../data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
 ```
 
 ### Subset data to include only samples from GF
@@ -88,19 +86,33 @@ labelCutoff <- 10
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
 
+Use the slope of the rarefaction curve to decide cut-off
+- How do you do this?
+- My idea:
+
 ```{r}
-slope <- read.delim("./code/Rhea-master/1.Normalization/RarefactionCurve.TAB", sep = "\t", check.names = F)
-slope %>% ggplot(mapping = aes(x = slope, y = SampleID)) +
-  geom_bar(stat = "identity")
-#test %>% ggplot(mapping = aes(x = reorder(rownames(.), -rowsums), y = rowsums)) +
-  #geom_bar(stat = "identity") +
+rslope <- read.delim("../code/Rhea-master/1.Normalization/RarefactionCurve.TAB", sep = "\t", check.names = F)
+
+rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
+  geom_point() +
+  ylim(0, 2)
+
+```
+```{r}
+# Calculate read count
+cut <- rslope[rslope$slope > 0.75,] # set threshold set by visual inspection of the plot
+
+test <- prune_samples(-cut$SampleID,gfData)
+
+
 ```
 
 
-Load in slope
-Plot the value
-Decide on cut-off
-remove values from otu rhea tab
+
+
+remove values from gf data
+make new rhea tab
+eventually save new files
 
 
 ## 2.3.2.3 Filtering

@@ -508,16 +508,16 @@ C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treef18b84e59146e6dae5dc9735e2b5189df6b6cc0btargetblankf18b84ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/f18b84e59146e6dae5dc9735e2b5189df6b6cc0b" target="_blank">f18b84e</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treee56437a51841be04b3f1beaf296a0ebcfb1422f0targetblanke56437aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/e56437a51841be04b3f1beaf296a0ebcfb1422f0" target="_blank">e56437a</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treef18b84e59146e6dae5dc9735e2b5189df6b6cc0btargetblankf18b84ea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21treee56437a51841be04b3f1beaf296a0ebcfb1422f0targetblanke56437aa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/f18b84e59146e6dae5dc9735e2b5189df6b6cc0b" target="_blank">f18b84e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/e56437a51841be04b3f1beaf296a0ebcfb1422f0" target="_blank">e56437a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -571,6 +571,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/blob/e56437a51841be04b3f1beaf296a0ebcfb1422f0/analysis/5_step_1.Rmd" target="_blank">e56437a</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+wflow_publish(“./analysis/5_step_1.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stinekrye/Project_in_Bioinformatics_E21/c679c8301eb4a74cc7977eb8331a7d1e8b90643f/docs/5_step_1.html" target="_blank">c679c83</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -854,9 +888,12 @@ ASV10001                              0                              0</code></p
 <p>The following has been changed in the Rhea Normalization.R file: setwd(“C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization”) file_name &lt;- “oil_ASVtable_RHEA.txt” labelCutoff &lt;- 10</p>
 <pre class="r"><code>#source(&quot;./code/Rhea-master/1.Normalization/Normalization.R&quot;)
 #setwd(&quot;C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21&quot;)</code></pre>
-<p>Use the slope of the rarefaction curve to decide cut-off<br />
-- ** How do you do this? **<br />
-- My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection</p>
+<blockquote>
+<p>How do you usually Use the slope of the rarefaction curve to decide cut-off? How do decide on value + how to do it in R</p>
+</blockquote>
+<ul>
+<li>My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection</li>
+</ul>
 <pre class="r"><code>rslope &lt;- read.delim(&quot;./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB&quot;, sep = &quot;\t&quot;, check.names = F)
 
 rslope %&gt;% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
@@ -914,15 +951,18 @@ alphaSampleData &lt;- merge(sampleData, alpha, by = 0)</code></pre>
 <h4>Plot type 1: Show richness in different groups</h4>
 <p>The data is seperated into in situ vs. SW and then additionally seperated into deep, sediment and surface</p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
-  geom_violin() +
+  geom_violin(aes(fill = location)) +
+  theme_minimal() +
   facet_wrap(&quot;type&quot;)</code></pre>
 <p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = oil)) +
+  theme_minimal() +
   facet_wrap(&quot;type&quot;)</code></pre>
 <p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = Evenness)) +
+  theme_minimal() +
   facet_wrap(&quot;type&quot;)</code></pre>
 <p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
@@ -930,9 +970,9 @@ alphaSampleData &lt;- merge(sampleData, alpha, by = 0)</code></pre>
 </blockquote>
 <p>When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?</p>
 <ul>
-<li>Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)</li>
+<li><p>Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment) *</p></li>
+<li><p>Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *</p></li>
 </ul>
-<p>Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *</p>
 </div>
 <div id="plot-type-2-visualize-the-relationsship-between-alpha-diversity-and-cpcr-numbers" class="section level4">
 <h4>Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers</h4>

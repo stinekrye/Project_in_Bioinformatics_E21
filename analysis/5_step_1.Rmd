@@ -27,9 +27,9 @@ library(phyloseq)
 library(vegan)
 
 
-sampleData <- read_excel("../data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
-asvTable <- read.delim("../data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
-taxaId <- read.delim("../data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
 ```
 
 ### Subset data to include only samples from GF
@@ -92,7 +92,7 @@ Use the slope of the rarefaction curve to decide cut-off
 
 ```{r}
 # Exclude samples based on rarefaction curve
-rslope <- read.delim("../code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
+rslope <- read.delim("./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
 
 rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
   geom_point() +
@@ -156,7 +156,7 @@ Make two plots:
 - One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)
 
 ```{r}
-alpha <- read.delim("../code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
 alphaSampleData <- merge(sampleData, alpha, by = 0)
 ```
 

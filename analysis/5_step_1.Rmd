@@ -9,12 +9,12 @@ editor_options:
 
 ## Introduction
 
-The purpose of this script is to illustrate the workflow of how to produce/explore the following:
-- 2.3.2.1: Remove singletons, unwanted sequences and negative controls
-- 2.3.2.2: Normalize data
-        - Rarefaction curves
-- 2.3.2.3: Filtering of sequences and samples
-- 2.3.3: Alpha diversity  (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).
+The purpose of this script is to illustrate the workflow of how to produce/explore the following:  
+- 2.3.2.1: Remove singletons, unwanted sequences and negative controls  
+- 2.3.2.2: Normalize data  
+        - Rarefaction curves  
+- 2.3.2.3: Filtering of sequences and samples  
+- 2.3.3: Alpha diversity  (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).  
 
 
 

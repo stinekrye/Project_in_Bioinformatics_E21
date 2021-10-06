@@ -92,9 +92,9 @@ labelCutoff <- 10
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
   
+    
+> How do you usually Use the slope of the rarefaction curve to decide cut-off? How do decide on value + how to do it in R  
   
-Use the slope of the rarefaction curve to decide cut-off  
-- ** How do you do this? **  
 - My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
 
 ```{r}
@@ -191,15 +191,18 @@ The data is seperated into in situ vs. SW and then additionally seperated into d
 
 ```{r}
 alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
-  geom_violin() +
+  geom_violin(aes(fill = location)) +
+  theme_minimal() +
   facet_wrap("type")
 
 alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = oil)) +
+  theme_minimal() +
   facet_wrap("type")
 
 alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = Evenness)) +
+  theme_minimal() +
   facet_wrap("type")
 ```
   
@@ -207,9 +210,9 @@ alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
 
 When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?
   
-* Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
-
-Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *
+* Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment) *  
+  
+* Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *
 
 
 #### Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers

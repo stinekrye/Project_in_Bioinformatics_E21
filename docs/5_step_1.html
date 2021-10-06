@@ -508,16 +508,16 @@ C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree09a18b1ef2a8faac82680460ecf9dea95c944f5etargetblank09a18b1a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/09a18b1ef2a8faac82680460ecf9dea95c944f5e" target="_blank">09a18b1</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree059129b9d705f7fe27fcb68c0bcf72acf890dcf2targetblank059129ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/059129b9d705f7fe27fcb68c0bcf72acf890dcf2" target="_blank">059129b</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree09a18b1ef2a8faac82680460ecf9dea95c944f5etargetblank09a18b1a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstinekryeProjectinBioinformaticsE21tree059129b9d705f7fe27fcb68c0bcf72acf890dcf2targetblank059129ba" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/09a18b1ef2a8faac82680460ecf9dea95c944f5e" target="_blank">09a18b1</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/tree/059129b9d705f7fe27fcb68c0bcf72acf890dcf2" target="_blank">059129b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -531,7 +531,6 @@ Ignored files:
 Untracked files:
     Untracked:  code/Rhea-master/
     Untracked:  data/get_seq.r
-    Untracked:  oil_ASVtable_RHEA_CUT.txt
     Untracked:  oil_spill.nwk
     Untracked:  treemaker.sh
 
@@ -572,6 +571,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stinekrye/Project_in_Bioinformatics_E21/blob/059129b9d705f7fe27fcb68c0bcf72acf890dcf2/analysis/5_step_1.Rmd" target="_blank">059129b</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+wflow_publish(“./analysis/5_step_1.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stinekrye/Project_in_Bioinformatics_E21/f8883cd6d8e495531fc6012d0d94a28f9651b9b8/docs/5_step_1.html" target="_blank">f8883cd</a>
+</td>
+<td>
+stinekrye
+</td>
+<td>
+2021-10-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -702,35 +735,28 @@ clean-up of old files
 <h2>Introduction</h2>
 <p>The purpose of this script is to illustrate the workflow of how to produce/explore the following:<br />
 - 2.3.2.1: Remove singletons, unwanted sequences and negative controls<br />
-- 2.3.2.2: Normalize data<br />
-- Rarefaction curves<br />
-- 2.3.2.3: Filtering of sequences and samples<br />
+- 2.3.2.2: Normalize data and removal of samples with low count (Using Rhea)<br />
 - 2.3.3: Alpha diversity (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).</p>
 <div id="load-data-and-libraries" class="section level3">
 <h3>Load data and libraries</h3>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>-- Attaching packages --------------------------------------- tidyverse 1.3.1 --</code></pre>
-<pre><code>v ggplot2 3.3.5     v purrr   0.3.4
-v tibble  3.1.4     v dplyr   1.0.7
-v tidyr   1.1.3     v stringr 1.4.0
-v readr   2.0.1     v forcats 0.5.1</code></pre>
-<pre><code>-- Conflicts ------------------------------------------ tidyverse_conflicts() --
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(readxl)
+<pre class="r"><code>library(tidyverse)
+library(readxl)
 library(phyloseq)
-library(vegan)</code></pre>
-<pre><code>Indlæser krævet pakke: permute</code></pre>
-<pre><code>Indlæser krævet pakke: lattice</code></pre>
-<pre><code>This is vegan 2.5-7</code></pre>
-<pre class="r"><code>sampleData &lt;- read_excel(&quot;./data/sampleData.xlsx&quot;) %&gt;% column_to_rownames(., var = &quot;Samples&quot;)
+library(vegan)
+
+
+sampleData &lt;- read_excel(&quot;./data/sampleData.xlsx&quot;) %&gt;% column_to_rownames(., var = &quot;Samples&quot;)
 asvTable &lt;- read.delim(&quot;./data/oil_ASVtable.txt&quot;, sep = &quot;\t&quot;, row.names = &quot;ASVs&quot;, check.names = F) #%&gt;% select(., -&#39;row.names&#39;)
 taxaId &lt;- read.delim(&quot;./data/oil_ASVtaxid.txt&quot;, sep = &quot;\t&quot;, row.names = &quot;ASVs&quot;) %&gt;% select(., -&#39;row.names&#39;)</code></pre>
 </div>
 <div id="subset-data-to-include-only-samples-from-gf" class="section level3">
 <h3>Subset data to include only samples from GF</h3>
 <p>This is done to make the workflow / troubleshooting easier</p>
-<p>Create phyloseq object, which makes subsetting all three files easy. Then subset.</p>
+<ol style="list-style-type: decimal">
+<li>Create phyloseq object, which makes subsetting all three files easy.<br />
+</li>
+<li>Then subset.</li>
+</ol>
 <pre class="r"><code>asvTable &lt;- otu_table(asvTable, taxa_are_rows = TRUE)
 sampleData &lt;- sample_data(sampleData)
 taxaId &lt;- tax_table(as.matrix(taxaId))
@@ -743,13 +769,438 @@ gfData &lt;- subset_samples(phyloData, region == &quot;GF&quot;)
 GF_asvTable &lt;- as.data.frame(otu_table(gfData))
 GF_sampleData &lt;- as.data.frame(sample_data(gfData))
 GF_taxaId &lt;- as.data.frame(tax_table(taxaId))</code></pre>
-<p>The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy. I need to create the table. oil_ASVtable is already a tab seperated file with the right orientation. I need to add the taxonomy column</p>
+</div>
+<div id="create-the-input-file-for-rhea" class="section level3">
+<h3>Create the input file for Rhea</h3>
+<p>The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy.</p>
+<p>oil_ASVtable needs a taxonomy column.</p>
 <pre class="r"><code>taxo &lt;- GF_taxaId
 taxo$taxonomy &lt;- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = &quot;;&quot;) # concatenate rows
 taxo &lt;- taxo %&gt;% select(c(taxonomy))                                                                                   # make dataframe ready for merge
 rhea_GF_asvTable &lt;- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable &lt;- column_to_rownames(rhea_GF_asvTable, var = &quot;Row.names&quot;)                                            # restore rownames
-#write.table(rhea_GF_asvTable, file = &quot;oil_ASVtable_RHEA.txt&quot;, sep = &quot;\t&quot;, quote = F) # Is moved to the Rhea folder</code></pre>
+#write.table(rhea_GF_asvTable, file = &quot;oil_ASVtable_RHEA.txt&quot;, sep = &quot;\t&quot;, quote = F) # Is moved to the Rhea folder
+head(rhea_GF_asvTable)</code></pre>
+<pre><code>         AG-101_S106_F_filt.fastq.gz AG-102_S118_F_filt.fastq.gz
+ASV1                               0                           0
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-103_S130_F_filt.fastq.gz AG-104_S142_F_filt.fastq.gz
+ASV1                               0                           0
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-105_S154_F_filt.fastq.gz AG-106_S71_F_filt.fastq.gz
+ASV1                             122                        146
+ASV10                              0                         21
+ASV100                             0                          0
+ASV1000                           60                         39
+ASV10000                           0                          0
+ASV10001                           0                          0
+         AG-109_S83_F_filt.fastq.gz AG-110_S149_F_filt.fastq.gz
+ASV1                           2247                        1974
+ASV10                            96                         184
+ASV100                            0                           0
+ASV1000                          47                          14
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-111_S95_F_filt.fastq.gz AG-112_S107_F_filt.fastq.gz
+ASV1                              0                        1098
+ASV10                             3                         787
+ASV100                            0                           0
+ASV1000                           0                          25
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-113_S127_F_filt.fastq.gz AG-114_S119_F_filt.fastq.gz
+ASV1                               0                           0
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                          23
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-117_S161_F_filt.fastq.gz AG-118_S131_F_filt.fastq.gz
+ASV1                             462                         938
+ASV10                            232                          49
+ASV100                             0                           0
+ASV1000                            0                          12
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-119_S78_F_filt.fastq.gz AG-120_S90_F_filt.fastq.gz
+ASV1                            575                        430
+ASV10                           229                        321
+ASV100                            0                          0
+ASV1000                          29                         30
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-121_S143_F_filt.fastq.gz AG-122_S155_F_filt.fastq.gz
+ASV1                               7                          90
+ASV10                              0                           3
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-123_S72_F_filt.fastq.gz AG-124_S84_F_filt.fastq.gz
+ASV1                             78                         80
+ASV10                             0                          0
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-129_S96_F_filt.fastq.gz AG-130_S108_F_filt.fastq.gz
+ASV1                              0                        1073
+ASV10                             0                           0
+ASV100                            0                           0
+ASV1000                           0                           0
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-131_S120_F_filt.fastq.gz AG-132_S132_F_filt.fastq.gz
+ASV1                               0                         866
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-133_S144_F_filt.fastq.gz AG-134_S139_F_filt.fastq.gz
+ASV1                             793                           0
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-135_S156_F_filt.fastq.gz AG-136_S73_F_filt.fastq.gz
+ASV1                               0                         64
+ASV10                              0                         14
+ASV100                             0                          0
+ASV1000                            0                          0
+ASV10000                           0                          0
+ASV10001                           0                          0
+         AG-137_S85_F_filt.fastq.gz AG-138_S77_F_filt.fastq.gz
+ASV1                             57                        273
+ASV10                             7                          0
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-139_S97_F_filt.fastq.gz AG-140_S109_F_filt.fastq.gz
+ASV1                              0                          12
+ASV10                             0                           0
+ASV100                            0                           0
+ASV1000                           0                           0
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-145_S121_F_filt.fastq.gz AG-146_S133_F_filt.fastq.gz
+ASV1                            1176                        1720
+ASV10                             22                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-147_S145_F_filt.fastq.gz AG-148_S157_F_filt.fastq.gz
+ASV1                            1636                        1394
+ASV10                              8                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-149_S102_F_filt.fastq.gz AG-150_S114_F_filt.fastq.gz
+ASV1                            5973                        4851
+ASV10                             28                          25
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-153_S74_F_filt.fastq.gz AG-154_S86_F_filt.fastq.gz
+ASV1                              0                          0
+ASV10                             7                          0
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-155_S126_F_filt.fastq.gz AG-156_S138_F_filt.fastq.gz
+ASV1                               0                          12
+ASV10                              0                          43
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-161_S98_F_filt.fastq.gz AG-162_S150_F_filt.fastq.gz
+ASV1                             38                          63
+ASV10                             0                          37
+ASV100                            0                           0
+ASV1000                          11                           9
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-163_S110_F_filt.fastq.gz AG-164_S122_F_filt.fastq.gz
+ASV1                            3818                         686
+ASV10                            245                         633
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-165_S162_F_filt.fastq.gz AG-166_S79_F_filt.fastq.gz
+ASV1                             287                         77
+ASV10                            268                        273
+ASV100                             0                          0
+ASV1000                            0                          0
+ASV10000                           0                          0
+ASV10001                           0                          0
+         AG-167_S134_F_filt.fastq.gz AG-168_S146_F_filt.fastq.gz
+ASV1                              17                          13
+ASV10                           2522                         873
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-169_S158_F_filt.fastq.gz AG-170_S75_F_filt.fastq.gz
+ASV1                               0                          0
+ASV10                              0                          0
+ASV100                             0                          0
+ASV1000                            0                          0
+ASV10000                           0                          0
+ASV10001                           0                          0
+         AG-171_S91_F_filt.fastq.gz AG-172_S87_F_filt.fastq.gz
+ASV1                              0                          0
+ASV10                             0                          0
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-177_S99_F_filt.fastq.gz AG-178_S111_F_filt.fastq.gz
+ASV1                              0                           0
+ASV10                             0                           0
+ASV100                            0                           0
+ASV1000                           0                           0
+ASV10000                          0                           0
+ASV10001                          0                           0
+         AG-179_S123_F_filt.fastq.gz AG-180_S135_F_filt.fastq.gz
+ASV1                              62                           0
+ASV10                             25                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-181_S147_F_filt.fastq.gz AG-182_S159_F_filt.fastq.gz
+ASV1                               0                           0
+ASV10                              0                           0
+ASV100                             0                           0
+ASV1000                            0                           0
+ASV10000                           0                           0
+ASV10001                           0                           0
+         AG-183_S76_F_filt.fastq.gz AG-184_S88_F_filt.fastq.gz
+ASV1                              0                          0
+ASV10                             0                          0
+ASV100                            0                          0
+ASV1000                          11                         12
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-73_S69_F_filt.fastq.gz AG-74_S81_F_filt.fastq.gz
+ASV1                             0                         0
+ASV10                            0                         0
+ASV100                           0                         0
+ASV1000                          0                         0
+ASV10000                         0                         0
+ASV10001                         0                         0
+         AG-77_S148_F_filt.fastq.gz AG-78_S93_F_filt.fastq.gz
+ASV1                             11                         0
+ASV10                            13                         0
+ASV100                            0                         0
+ASV1000                           0                         0
+ASV10000                          0                         0
+ASV10001                          0                         0
+         AG-79_S103_F_filt.fastq.gz AG-80_S115_F_filt.fastq.gz
+ASV1                              0                          0
+ASV10                             0                          0
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-81_S105_F_filt.fastq.gz AG-82_S117_F_filt.fastq.gz
+ASV1                            136                         38
+ASV10                          1777                        996
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-85_S129_F_filt.fastq.gz AG-86_S89_F_filt.fastq.gz
+ASV1                             28                        40
+ASV10                           659                      2464
+ASV100                            0                         0
+ASV1000                           0                         0
+ASV10000                          0                         0
+ASV10001                          0                         0
+         AG-87_S141_F_filt.fastq.gz AG-88_S101_F_filt.fastq.gz
+ASV1                             57                         65
+ASV10                           717                       1896
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-89_S153_F_filt.fastq.gz AG-90_S70_F_filt.fastq.gz
+ASV1                              0                         0
+ASV10                            75                        96
+ASV100                            0                         0
+ASV1000                           0                         0
+ASV10000                          0                         0
+ASV10001                          0                         0
+         AG-93_S82_F_filt.fastq.gz AG-94_S113_F_filt.fastq.gz
+ASV1                             0                         12
+ASV10                           27                        109
+ASV100                           0                          0
+ASV1000                          0                          0
+ASV10000                         0                          0
+ASV10001                         0                          0
+         AG-95_S125_F_filt.fastq.gz AG-96_S137_F_filt.fastq.gz
+ASV1                              0                          8
+ASV10                            42                         47
+ASV100                            0                          0
+ASV1000                           0                          0
+ASV10000                          0                          0
+ASV10001                          0                          0
+         AG-97_S94_F_filt.fastq.gz AG-98_S160_F_filt.fastq.gz
+ASV1                             0                          0
+ASV10                           23                          0
+ASV100                           0                          0
+ASV1000                          0                          0
+ASV10000                         0                          0
+ASV10001                         0                          0
+         AG-X_S136_F_filt.fastq.gz FG-107_S131 FG-108_S143 FG-111_S164
+ASV1                          2403        2278        8096       11987
+ASV10                            0        1628         514        1232
+ASV100                           0           0           0           0
+ASV1000                          0          70          56          25
+ASV10000                         0           0           0           0
+ASV10001                         0           0           0           0
+         FG-112_S155 FG-113_S167 FG-114_S179 FG-125_S191 FG-126_S176
+ASV1            1329          57          44        1382        6097
+ASV10           1016           0           0           0           0
+ASV100             0           0           0           0           0
+ASV1000           36          49          83           0           0
+ASV10000           0           0           0           0           0
+ASV10001           0           0           0           0           0
+         FG-127_S192 FG-128_S188 FG-129_S204 FG-134_S105 FG-135_S117
+ASV1             662        1242         210        2076        1356
+ASV10              0           0           0           0           0
+ASV100             0           0           0           0           0
+ASV1000            0           0           0           0           0
+ASV10000           0           0           0           0           0
+ASV10001           0           0           0           0           0
+         FG-142_S216 FG-144_S228 FG-73_S119 FG-74_S104 FG-75_S116 FG-76_S128
+ASV1            6817        1790         26          0        155         98
+ASV10             76          18          8         12          0         13
+ASV100             0           0          0          0          0          0
+ASV1000            0           0          0          0          0          0
+ASV10000           0           0          0          0          0          0
+ASV10001           0           0          0          0          0          0
+         FG-79_S140 FG-80_S152 FG-B_S166 FG-GF-A_S200 FG-GF-C_S212 FG-GF-D_S248
+ASV1             16         72         0            0           18            7
+ASV10            20         33         0            0            0            0
+ASV100            0          0         0            0            0            0
+ASV1000           0          0         0            0            0            0
+ASV10000          0          0         0            0            0            0
+ASV10001          0          0         0            0            0            0
+         FG-GF-E_S163 FG-GF-F_S283 FG-GF-G_S213 FG-GF-H_S224 FG-GF-I_S201
+ASV1                0            0            0            9           16
+ASV10               0            0            0            9            0
+ASV100             15           13           23            0           35
+ASV1000             0            0            0            0            0
+ASV10000            0            0            0            0            0
+ASV10001            0            0            0            0            0
+         FG-GF-J_S187 FG-GF-K_S260 FG-GF-L_S175 FG-GF-M_S236 FG-GF-N_S271
+ASV1                0           16            0            0            8
+ASV10               0            0            0            0            0
+ASV100              7            0            0            0            0
+ASV1000             0            0            0            0            0
+ASV10000            0            0            0            0            0
+ASV10001            0            0            0            0            0
+         FGJuly_100_S58_F_filt.fastq.gz FGJuly_107_S70_F_filt.fastq.gz
+ASV1                                  0                           1928
+ASV10                                11                           3145
+ASV100                                0                              0
+ASV1000                               0                             14
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_108_S82_F_filt.fastq.gz FGJuly_115_S94_F_filt.fastq.gz
+ASV1                               6044                            373
+ASV10                               745                             76
+ASV100                                0                              0
+ASV1000                               9                              0
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_116_S106_F_filt.fastq.gz FGJuly_141_S118_F_filt.fastq.gz
+ASV1                                 743                            3237
+ASV10                                148                              25
+ASV100                                 0                               0
+ASV1000                                0                               0
+ASV10000                               0                               0
+ASV10001                               0                               0
+         FGJuly_143_S35_F_filt.fastq.gz FGJuly_157_S47_F_filt.fastq.gz
+ASV1                               3485                            227
+ASV10                                 0                            213
+ASV100                                0                              0
+ASV1000                               0                              0
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_158_S59_F_filt.fastq.gz FGJuly_159_S71_F_filt.fastq.gz
+ASV1                                175                             19
+ASV10                               154                            418
+ASV100                                0                              0
+ASV1000                               0                              0
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_160_S83_F_filt.fastq.gz FGJuly_173_S95_F_filt.fastq.gz
+ASV1                                 49                              0
+ASV10                               620                              0
+ASV100                                0                              0
+ASV1000                               0                              0
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_174_S107_F_filt.fastq.gz FGJuly_175_S119_F_filt.fastq.gz
+ASV1                                   0                               0
+ASV10                                  0                               0
+ASV100                                 0                               0
+ASV1000                                0                               0
+ASV10000                               0                               0
+ASV10001                               0                               0
+         FGJuly_176_S36_F_filt.fastq.gz FGJuly_75_S100_F_filt.fastq.gz
+ASV1                                 18                             17
+ASV10                                 0                            193
+ASV100                                0                              0
+ASV1000                               0                              0
+ASV10000                              0                              0
+ASV10001                              0                              0
+         FGJuly_83_S93_F_filt.fastq.gz FGJuly_84_S105_F_filt.fastq.gz
+ASV1                                96                            211
+ASV10                             2225                           1895
+ASV100                               0                              0
+ASV1000                              0                              0
+ASV10000                             0                              0
+ASV10001                             0                              0
+         FGJuly_91_S117_F_filt.fastq.gz FGJuly_92_S34_F_filt.fastq.gz
+ASV1                                  0                             0
+ASV10                                74                            51
+ASV100                                0                             0
+ASV1000                               0                             0
+ASV10000                              0                             0
+ASV10001                              0                             0
+         FGJuly_99_S46_F_filt.fastq.gz
+ASV1                                11
+ASV10                                0
+ASV100                               0
+ASV1000                              0
+ASV10000                             0
+ASV10001                             0
+                                                                                                     taxonomy
+ASV1          Bacteria;Proteobacteria;Oceanospirillales;Saccharospirillaceae;Gammaproteobacteria;Oleispira;NA
+ASV10                              Bacteria;Proteobacteria;Oceanospirillales;P13-46;Gammaproteobacteria;NA;NA
+ASV100         Bacteria;Proteobacteria;Alteromonadales;Alteromonadaceae;Gammaproteobacteria;Paraglaciecola;NA
+ASV1000  Bacteria;Proteobacteria;Oceanospirillales;Pseudohongiellaceae;Gammaproteobacteria;Pseudohongiella;NA
+ASV10000       Bacteria;Proteobacteria;Bdellovibrionales;Bdellovibrionaceae;Deltaproteobacteria;OM27_clade;NA
+ASV10001                          Bacteria;Bacteroidetes;Flavobacteriales;Flavobacteriaceae;Bacteroidia;NA;NA</code></pre>
 </div>
 </div>
 <div id="remove-singletons-unwanted-sequences-and-negative-controls" class="section level2">
@@ -760,22 +1211,35 @@ rhea_GF_asvTable &lt;- column_to_rownames(rhea_GF_asvTable, var = &quot;Row.name
 <h2>2.3.2.2 Normalization and removal of samples with low count</h2>
 <div id="rhea-workflow" class="section level3">
 <h3>Rhea Workflow</h3>
-<p>Run two times. First time to identify underrepresented samples. Which has to be removed Second time the analysis is made based on the updated OTU table.</p>
+<p>Run two times:<br />
+- First time to identify underrepresented samples, which has to be removed<br />
+- Second time the analysis is made based on the updated OTU table.</p>
+<div id="first-rhea-run" class="section level4">
+<h4>First Rhea run</h4>
 <p>The following has been changed in the Rhea Normalization.R file: setwd(“C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization”) file_name &lt;- “oil_ASVtable_RHEA.txt” labelCutoff &lt;- 10</p>
 <pre class="r"><code>#source(&quot;./code/Rhea-master/1.Normalization/Normalization.R&quot;)
 #setwd(&quot;C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21&quot;)</code></pre>
-<p>Use the slope of the rarefaction curve to decide cut-off - How do you do this? - My idea:</p>
-<pre class="r"><code># Exclude samples based on rarefaction curve
-rslope &lt;- read.delim(&quot;./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB&quot;, sep = &quot;\t&quot;, check.names = F)
+<p>Use the slope of the rarefaction curve to decide cut-off<br />
+- How do you do this?<br />
+- My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection</p>
+<pre class="r"><code>rslope &lt;- read.delim(&quot;./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB&quot;, sep = &quot;\t&quot;, check.names = F)
 
 rslope %&gt;% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
   geom_point() +
-  ylim(0, 2)</code></pre>
+  ylim(0, 2) +
+  theme_classic()+
+  theme(axis.text.x=element_blank())+
+  xlab(&quot;SampleID (reordered)&quot;) +
+  ylab(&quot;Slope of rarefaction curve&quot;)</code></pre>
 <pre><code>Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/5_step_1.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>cut &lt;- rslope[rslope$slope &gt; 0.75,] # set threshold set by visual inspection of the plot</code></pre>
+<p>First find the names of the samples, which gets excluded based on a large slope</p>
+<pre class="r"><code># set threshold set by visual inspection of the plot
+cut &lt;- rslope[rslope$slope &gt; 0.75,]</code></pre>
+<p>Then find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.</p>
 <pre class="r"><code># Cut away samples based on too low count.
 too_low_sample_size &lt;- colnames(GF_asvTable)[colSums(GF_asvTable) &lt; 10000]</code></pre>
+<p>Remove those samples from the phyloseq object, so we can use it to generate a new input file for Rhea</p>
 <pre class="r"><code># Cut away unwanted sequences
 unwanted &lt;- c(cut$SampleID, too_low_sample_size)
 wanted &lt;- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
@@ -786,36 +1250,55 @@ taxo$taxonomy &lt;- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, ta
 taxo &lt;- taxo %&gt;% select(c(taxonomy))                                                                                   # make dataframe ready for merge
 rhea_GF_asvTable &lt;- merge(as.data.frame(otu_table(gfDataCut)), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable &lt;- column_to_rownames(rhea_GF_asvTable, var = &quot;Row.names&quot;)                                            # restore rownames
-write.table(rhea_GF_asvTable, file = &quot;oil_ASVtable_RHEA_CUT.txt&quot;, sep = &quot;\t&quot;, quote = F) # Is moved to the Rhea folder</code></pre>
-<p>Redo Rhea analysis:</p>
+#write.table(rhea_GF_asvTable, file = &quot;oil_ASVtable_RHEA_CUT.txt&quot;, sep = &quot;\t&quot;, quote = F) # Is moved to the Rhea folder</code></pre>
+</div>
+<div id="second-rhea-run" class="section level4">
+<h4>Second Rhea run</h4>
 <p>The following has been changed in the Rhea Normalization.R file: setwd(“C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization”) file_name &lt;- “oil_ASVtable_RHEA_CUT.txt” labelCutoff &lt;- 5</p>
 <pre class="r"><code>#source(&quot;../code/Rhea-master/1.Normalization/Normalization.R&quot;)
 #setwd(&quot;C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21&quot;)</code></pre>
 </div>
 </div>
+</div>
 <div id="calculate-alpha-diversity" class="section level2">
 <h2>2.3.3.1 Calculate Alpha diversity</h2>
-<p>Follow the Rhea workflow</p>
+<div id="follow-the-rhea-workflow" class="section level3">
+<h3>Follow the Rhea workflow</h3>
+<p>Use the normalized read counts</p>
 <pre class="r"><code>#source(&quot;../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R&quot;)
 #setwd(&quot;C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21&quot;)</code></pre>
-<p>Idea: merge the sampleData ans the alpha measure. Make two plots: - One with qPCR abundance values against both of the effective indexes (color coded) - One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)</p>
+</div>
+<div id="visualization-of-alpha-diversity" class="section level3">
+<h3>Visualization of alpha diversity</h3>
+<p>Idea: Make two plots: - One with qPCR abundance values against both of the effective indexes (color coded) - One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)</p>
+<p>Merge the sampleData and the alpha-diversity measures in one table to make plotting easier</p>
 <pre class="r"><code>alpha &lt;- read.delim(&quot;./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB&quot;, sep = &quot;\t&quot;, check.names = F, row.names = 1)
 alphaSampleData &lt;- merge(sampleData, alpha, by = 0)</code></pre>
+<div id="plot-type-1-show-richness-in-different-groups" class="section level4">
+<h4>Plot type 1: Show richness in different groups</h4>
+<p>The data is seperated into in situ vs. SW and then additionally seperated into deep, sediment and surface</p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_violin() +
   facet_wrap(&quot;type&quot;)</code></pre>
-<p><img src="figure/5_step_1.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = oil)) +
   facet_wrap(&quot;type&quot;)</code></pre>
-<p><img src="figure/5_step_1.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = Evenness)) +
   facet_wrap(&quot;type&quot;)</code></pre>
-<p><img src="figure/5_step_1.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /> ? How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used? When using effective richness (enumeration) the distribution looks random.</p>
-<p>Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)</p>
-<p>Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate</p>
-<p>Visualize correlation between QPCR copies and simpson effective numbers. ? Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?</p>
+<p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /> &gt; How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used?</p>
+<p>When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?</p>
+<p>** Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)</p>
+<p>Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate **</p>
+</div>
+<div id="plot-type-2-visualize-the-relationsship-between-alpha-diversity-and-cpcr-numbers" class="section level4">
+<h4>Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers</h4>
+<p>The y axis is log scale. This seperates the points better.</p>
+<blockquote>
+<p>Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?</p>
+</blockquote>
 <pre class="r"><code>alphaSampleData %&gt;% ggplot(mapping = aes(y = QPCRCopies)) + 
   #geom_point(aes(x = Shannon.Effective, color = &quot;Shannon&quot;)) +
   geom_point(aes(x = Simpson.Effective, color = &quot;Simpson&quot;)) +
@@ -823,8 +1306,10 @@ alphaSampleData &lt;- merge(sampleData, alpha, by = 0)</code></pre>
   #xlim(0,100) +
   NULL</code></pre>
 <pre><code>Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<p><img src="figure/5_step_1.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Then clean up, prepare presentation and write/clean up introduction. Consider the difference between phyloseq and Rhea</p>
+<p><img src="figure/5_step_1.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Maybe do the same with phyloseq?</p>
+</blockquote>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -886,6 +1371,8 @@ loaded via a namespace (and not attached):
 [88] xfun_0.26              broom_0.7.9            later_1.3.0           
 [91] survival_3.2-11        iterators_1.0.13       IRanges_2.26.0        
 [94] cluster_2.1.2          ellipsis_0.3.2        </code></pre>
+</div>
+</div>
 </div>
 </div>
 

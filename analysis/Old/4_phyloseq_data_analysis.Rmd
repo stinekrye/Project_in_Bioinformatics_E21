@@ -17,9 +17,9 @@ library(readxl)
 
 
 ```{r}
-load("./data/2_seqtab.nochim.identifier.Rdata")
-load("./data/2_taxa.species.rds")
-sampleData <- read_excel("./data/1_sampleData.xlsx")
+load("./data/Old/2_seqtab.nochim.identifier.Rdata")
+load("./data/Old/2_taxa.species.rds")
+sampleData <- read_excel("./data/Old/1_sampleData.xlsx")
 sampleData <- column_to_rownames(sampleData, "ini_month_id")
 seqtab.nochim.identifier <- select(seqtab.nochim.identifier, -c("sample_name"))
 ```

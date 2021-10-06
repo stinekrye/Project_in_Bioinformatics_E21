@@ -4,14 +4,142 @@ author: "stinekrye"
 date: "2021-10-04"
 output: workflowr::wflow_html
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Introduction
 
-```{r}
+The purpose of this script is to illustrate the workflow of how to produce/explore the following:
+- 2.3.2.1: Remove singletons, unwanted sequences and negative controls
+- 2.3.2.2: Normalize data
+        - Rarefaction curves
+- 2.3.2.3: Filtering of sequences and samples
+- 2.3.3: Alpha diversity  (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).
 
+
+
+### Load data and libraries
+
+```{r}
+library(tidyverse)
+#library(Rhea)
+library(readxl)
+library(phyloseq)
+library(vegan)
+library(magick)
+library(pdftools)
+
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+```
+
+### Subset data to include only samples from GF
+This is done to make the workflow / troubleshooting easier
+
+Create phyloseq object, which makes subsetting all three files easy. Then subset.
+```{r}
+asvTable <- otu_table(asvTable, taxa_are_rows = TRUE)
+sampleData <- sample_data(sampleData)
+taxaId <- tax_table(as.matrix(taxaId))
+phyloData <- phyloseq(asvTable,sampleData, taxaId)
+
+
+gfData <- subset_samples(phyloData, region == "GF")
+
+
+GF_asvTable <- as.data.frame(otu_table(gfData))
+GF_sampleData <- as.data.frame(sample_data(gfData))
+GF_taxaId <- as.data.frame(tax_table(taxaId))
+```
+
+The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy.
+I need to create the table. oil_ASVtable is already a tab seperated file with the right orientation. I need to add the taxonomy column
+```{r}
+taxo <- GF_taxaId
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+#write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
 ```
 
 
 
+## 2.3.2.1 Remove singletons, unwanted sequences and negative controls
+First we need to remove singletons, chloroplast and mitochondrial species, and negatibe controls.
+- Ioannis have removed singletons, chloroplast and mitocondrial species
+- We have no negative controls in the in situ samples. By negative controls I mean a control which has not been in contact with any bacteria, but has been sequences to investigate the amount of "background noise" from the project.
+
+
+## 2.3.2.2 Normalization
+
+### Rhea Workflow
+Run two times. First time to identify underrepresented samples. Which has to be removed
+Second time the analysis is made based on the updated OTU table.
+
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "oil_ASVtable_RHEA.txt"
+labelCutoff <- 10 
+
+```{r}
+#source("./code/Rhea-master/1.Normalization/Normalization.R")
+#setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+
+```{r}
+slope <- read.delim("./code/Rhea-master/1.Normalization/RarefactionCurve.TAB", sep = "\t", check.names = F)
+slope %>% ggplot(mapping = aes(x = slope, y = SampleID)) +
+  geom_bar(stat = "identity")
+#test %>% ggplot(mapping = aes(x = reorder(rownames(.), -rowsums), y = rowsums)) +
+  #geom_bar(stat = "identity") +
+```
+
+
+Load in slope
+Plot the value
+Decide on cut-off
+remove values from otu rhea tab
+
+
+## 2.3.2.3 Filtering
+
+
+### Remove samples = Rarefaction curves
+
+Note: I have transposed the table, so the ASVs are the columns. Otherwise would the lines represent the ASVs! (The label names were the ASV names)
+
+Purpose: can be used to explore the species richness of the samples.
+We need it in order to decide how many samples we need to drop, due to low read count.
+
+Is produced by removing single reads from each sample one at the time, using resampling.The resampling stops when no samples is left, so is thus built from right to left. This process is repeated many times and the lines represent the average of each sample.
+The lines reflect the relationship between the number of species left in the sample, and the number of samples taken.
+
+It is thus a measure of richness! The starting point reflects the species richness by enumeration (is NOT standardized in relation to sample size!)
+
+We need to identify the minimum sample size need where most of the samples has reached a plateau.
+This reflects that the sequencing depth of that sample has been sufficient.
+
+```{r}
+GF_asvTable <- t(GF_asvTable)
+test <- rarecurve(GF_asvTable, step = 1000, label = F)
+```
+
+? What does the plot tell us?
+A few samples are much richer than the others. 
+% How can I define the cut-off based on this plot?
+```{r}
+test2 <- rareslope(GF_asvTable)
+```
+
+
+
+### Remove low abundance ASVs Rhea workflow
+Do I need to do it or does it do it automaticly?
+DO I need to remove samples (rarefaction curves) before I remove sample
+
+
+## 2.3.3.1 Calculate Alpha diversity
+
+Follow the Rhea workflow

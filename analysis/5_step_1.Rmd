@@ -70,7 +70,7 @@ First we need to remove singletons, chloroplast and mitochondrial species, and n
 - We have no negative controls in the in situ samples. By negative controls I mean a control which has not been in contact with any bacteria, but has been sequences to investigate the amount of "background noise" from the project.
 
 
-## 2.3.2.2 Normalization
+## 2.3.2.2 Normalization and removal of samples with low count 
 
 ### Rhea Workflow
 Run two times. First time to identify underrepresented samples. Which has to be removed
@@ -91,67 +91,111 @@ Use the slope of the rarefaction curve to decide cut-off
 - My idea:
 
 ```{r}
-rslope <- read.delim("../code/Rhea-master/1.Normalization/RarefactionCurve.TAB", sep = "\t", check.names = F)
+# Exclude samples based on rarefaction curve
+rslope <- read.delim("../code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
 
 rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
   geom_point() +
   ylim(0, 2)
 
-```
-```{r}
-# Calculate read count
 cut <- rslope[rslope$slope > 0.75,] # set threshold set by visual inspection of the plot
 
-test <- prune_samples(-cut$SampleID,gfData)
-
-
 ```
-
-
-
-
-remove values from gf data
-make new rhea tab
-eventually save new files
-
-
-## 2.3.2.3 Filtering
-
-
-### Remove samples = Rarefaction curves
-
-Note: I have transposed the table, so the ASVs are the columns. Otherwise would the lines represent the ASVs! (The label names were the ASV names)
-
-Purpose: can be used to explore the species richness of the samples.
-We need it in order to decide how many samples we need to drop, due to low read count.
-
-Is produced by removing single reads from each sample one at the time, using resampling.The resampling stops when no samples is left, so is thus built from right to left. This process is repeated many times and the lines represent the average of each sample.
-The lines reflect the relationship between the number of species left in the sample, and the number of samples taken.
-
-It is thus a measure of richness! The starting point reflects the species richness by enumeration (is NOT standardized in relation to sample size!)
-
-We need to identify the minimum sample size need where most of the samples has reached a plateau.
-This reflects that the sequencing depth of that sample has been sufficient.
 
 ```{r}
-GF_asvTable <- t(GF_asvTable)
-test <- rarecurve(GF_asvTable, step = 1000, label = F)
+# Cut away samples based on too low count.
+too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
 ```
 
-? What does the plot tell us?
-A few samples are much richer than the others. 
-% How can I define the cut-off based on this plot?
+
 ```{r}
-test2 <- rareslope(GF_asvTable)
+# Cut away unwanted sequences
+unwanted <- c(cut$SampleID, too_low_sample_size)
+wanted <- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
+gfDataCut <- prune_samples(wanted,gfData)
+```
+
+Make new Rhea file
+
+```{r}
+taxo <- as.data.frame(tax_table(taxaId))
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(otu_table(gfDataCut)), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA_CUT.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+```
+
+Redo Rhea analysis:
+
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "oil_ASVtable_RHEA_CUT.txt"
+labelCutoff <- 5 
+
+```{r}
+#source("../code/Rhea-master/1.Normalization/Normalization.R")
+#setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
 
 
-
-### Remove low abundance ASVs Rhea workflow
-Do I need to do it or does it do it automaticly?
-DO I need to remove samples (rarefaction curves) before I remove sample
 
 
 ## 2.3.3.1 Calculate Alpha diversity
 
 Follow the Rhea workflow
+
+```{r}
+#source("../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
+#setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+
+Idea: merge the sampleData ans the alpha measure.
+Make two plots:
+- One with qPCR abundance values against both of the effective indexes (color coded)
+- One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)
+
+```{r}
+alpha <- read.delim("../code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alphaSampleData <- merge(sampleData, alpha, by = 0)
+```
+
+
+```{r}
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_violin() +
+  facet_wrap("type")
+
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_jitter(aes(color = oil)) +
+  facet_wrap("type")
+
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_jitter(aes(color = Evenness)) +
+  facet_wrap("type")
+```
+? How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used?
+When using effective richness (enumeration) the distribution looks random.
+
+Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
+
+Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate
+
+
+
+
+Visualize correlation between QPCR copies and simpson effective numbers. 
+? Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?
+```{r}
+alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) + 
+  #geom_point(aes(x = Shannon.Effective, color = "Shannon")) +
+  geom_point(aes(x = Simpson.Effective, color = "Simpson")) +
+  scale_y_log10() +
+  #xlim(0,100) +
+  NULL
+```
+
+
+
+
+Then clean up, prepare presentation and write/clean up introduction. Consider the difference between phyloseq and Rhea

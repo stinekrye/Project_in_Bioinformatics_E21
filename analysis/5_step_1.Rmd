@@ -11,16 +11,14 @@ editor_options:
 
 The purpose of this script is to illustrate the workflow of how to produce/explore the following:  
 - 2.3.2.1: Remove singletons, unwanted sequences and negative controls  
-- 2.3.2.2: Normalize data  
-        - Rarefaction curves  
-- 2.3.2.3: Filtering of sequences and samples  
+- 2.3.2.2: Normalize data and removal of samples with low count (Using Rhea)  
 - 2.3.3: Alpha diversity  (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).  
 
 
 
 ### Load data and libraries
 
-```{r}
+```{r, message = FALSE, warnings = FALSE}
 library(tidyverse)
 library(readxl)
 library(phyloseq)
@@ -35,7 +33,8 @@ taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") 
 ### Subset data to include only samples from GF
 This is done to make the workflow / troubleshooting easier
 
-Create phyloseq object, which makes subsetting all three files easy. Then subset.
+1. Create phyloseq object, which makes subsetting all three files easy.  
+2. Then subset.
 ```{r}
 asvTable <- otu_table(asvTable, taxa_are_rows = TRUE)
 sampleData <- sample_data(sampleData)
@@ -51,8 +50,11 @@ GF_sampleData <- as.data.frame(sample_data(gfData))
 GF_taxaId <- as.data.frame(tax_table(taxaId))
 ```
 
+### Create the input file for Rhea
+
 The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy.
-I need to create the table. oil_ASVtable is already a tab seperated file with the right orientation. I need to add the taxonomy column
+
+oil_ASVtable needs a taxonomy column.
 ```{r}
 taxo <- GF_taxaId
 taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
@@ -60,6 +62,7 @@ taxo <- taxo %>% select(c(taxonomy))                                            
 rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
 #write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+head(rhea_GF_asvTable)
 ```
 
 
@@ -73,67 +76,83 @@ First we need to remove singletons, chloroplast and mitochondrial species, and n
 ## 2.3.2.2 Normalization and removal of samples with low count 
 
 ### Rhea Workflow
-Run two times. First time to identify underrepresented samples. Which has to be removed
-Second time the analysis is made based on the updated OTU table.
+Run two times:  
+- First time to identify underrepresented samples, which has to be removed  
+- Second time the analysis is made based on the updated OTU table.  
+  
+#### First Rhea run  
 
 The following has been changed in the Rhea Normalization.R file:
 setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
 file_name <- "oil_ASVtable_RHEA.txt"
 labelCutoff <- 10 
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #source("./code/Rhea-master/1.Normalization/Normalization.R")
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
-
-Use the slope of the rarefaction curve to decide cut-off
-- How do you do this?
-- My idea:
+  
+  
+Use the slope of the rarefaction curve to decide cut-off  
+- How do you do this?  
+- My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
 
 ```{r}
-# Exclude samples based on rarefaction curve
+
 rslope <- read.delim("./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
 
 rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
   geom_point() +
-  ylim(0, 2)
-
-cut <- rslope[rslope$slope > 0.75,] # set threshold set by visual inspection of the plot
+  ylim(0, 2) +
+  theme_classic()+
+  theme(axis.text.x=element_blank())+
+  xlab("SampleID (reordered)") +
+  ylab("Slope of rarefaction curve")
 
 ```
 
+
+
+First find the names of the samples, which gets excluded based on a large slope
+```{r}
+# set threshold set by visual inspection of the plot
+cut <- rslope[rslope$slope > 0.75,]
+```
+  
+  
+Then find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.  
 ```{r}
 # Cut away samples based on too low count.
 too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
 ```
-
-
+  
+  
+Remove those samples from the phyloseq object, so we can use it to generate a new input file for Rhea
 ```{r}
 # Cut away unwanted sequences
 unwanted <- c(cut$SampleID, too_low_sample_size)
 wanted <- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
 gfDataCut <- prune_samples(wanted,gfData)
 ```
-
+  
+  
 Make new Rhea file
-
 ```{r}
 taxo <- as.data.frame(tax_table(taxaId))
 taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
 taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
 rhea_GF_asvTable <- merge(as.data.frame(otu_table(gfDataCut)), taxo, by = 0)                                                    # 0 = rownames
 rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
-write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA_CUT.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+#write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA_CUT.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
 ```
 
-Redo Rhea analysis:
-
+#### Second Rhea run  
 The following has been changed in the Rhea Normalization.R file:
 setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
 file_name <- "oil_ASVtable_RHEA_CUT.txt"
 labelCutoff <- 5 
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #source("../code/Rhea-master/1.Normalization/Normalization.R")
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
@@ -143,23 +162,31 @@ labelCutoff <- 5
 
 ## 2.3.3.1 Calculate Alpha diversity
 
-Follow the Rhea workflow
+### Follow the Rhea workflow
+Use the normalized read counts
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #source("../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
 #setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
 
-Idea: merge the sampleData ans the alpha measure.
+### Visualization of alpha diversity
+Idea: 
 Make two plots:
 - One with qPCR abundance values against both of the effective indexes (color coded)
 - One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)
 
+  
+Merge the sampleData and the alpha-diversity measures in one table to make plotting easier
 ```{r}
 alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
 alphaSampleData <- merge(sampleData, alpha, by = 0)
 ```
 
+
+
+#### Plot type 1: Show richness in different groups
+The data is seperated into in situ vs. SW and then additionally seperated into deep, sediment and surface
 
 ```{r}
 alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
@@ -174,18 +201,20 @@ alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
   geom_jitter(aes(color = Evenness)) +
   facet_wrap("type")
 ```
-? How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used?
-When using effective richness (enumeration) the distribution looks random.
+> How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used? 
 
-Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
+When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?
 
-Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate
+** Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment)
+
+Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate **
 
 
+#### Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers
+The y axis is log scale. This seperates the points better.
 
+> Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?
 
-Visualize correlation between QPCR copies and simpson effective numbers. 
-? Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?
 ```{r}
 alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) + 
   #geom_point(aes(x = Shannon.Effective, color = "Shannon")) +
@@ -195,7 +224,4 @@ alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) +
   NULL
 ```
 
-
-
-
-Then clean up, prepare presentation and write/clean up introduction. Consider the difference between phyloseq and Rhea
+> Maybe do the same with phyloseq?

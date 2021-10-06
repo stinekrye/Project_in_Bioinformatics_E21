@@ -11,4 +11,4 @@ editor_options:
 Welcome to my research website.
 
 ### Index
-#### Data clean up: [here](2_data_cleanup.html)
+#### 06-10-2021 Data clean-up + alpha diversity. First try with Rhea: [link](5_step_1.html)

@@ -95,7 +95,8 @@ labelCutoff <- 10
     
 > How do you usually Use the slope of the rarefaction curve to decide cut-off? How do decide on value + how to do it in R  
   
-- My idea: Make a plot whuch enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
+- My idea: Make a plot which enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
+- Ioannis suggests only to remove those with a read count below 10000
 
 ```{r}
 
@@ -113,14 +114,9 @@ rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
 
 
 
-First find the names of the samples, which gets excluded based on a large slope
-```{r}
-# set threshold set by visual inspection of the plot
-cut <- rslope[rslope$slope > 0.75,]
-```
   
   
-Then find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.  
+Find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.  
 ```{r}
 # Cut away samples based on too low count.
 too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
@@ -130,7 +126,7 @@ too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
 Remove those samples from the phyloseq object, so we can use it to generate a new input file for Rhea
 ```{r}
 # Cut away unwanted sequences
-unwanted <- c(cut$SampleID, too_low_sample_size)
+unwanted <- too_low_sample_size
 wanted <- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
 gfDataCut <- prune_samples(wanted,gfData)
 ```
@@ -153,8 +149,8 @@ file_name <- "oil_ASVtable_RHEA_CUT.txt"
 labelCutoff <- 5 
 
 ```{r, message = FALSE, warning = FALSE}
-#source("../code/Rhea-master/1.Normalization/Normalization.R")
-#setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+source("../code/Rhea-master/1.Normalization/Normalization.R")
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
   
 The output file with normalized read counts is used in the next step
@@ -167,8 +163,8 @@ The output file with normalized read counts is used in the next step
 Use the normalized read counts
 
 ```{r, message = FALSE, warning = FALSE}
-#source("../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
-#setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+source("../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
 ```
 
 ### Visualization of alpha diversity

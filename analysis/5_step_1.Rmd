@@ -25,9 +25,9 @@ library(phyloseq)
 library(vegan)
 
 
-sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
-asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
-taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+sampleData <- read_excel("../data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("../data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("../data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
 ```
 
 ### Subset data to include only samples from GF
@@ -99,7 +99,7 @@ labelCutoff <- 10
 
 ```{r}
 
-rslope <- read.delim("./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
+rslope <- read.delim("../code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
 
 rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
   geom_point() +
@@ -180,8 +180,20 @@ Make two plots:
   
 Merge the sampleData and the alpha-diversity measures in one table to make plotting easier
 ```{r}
-alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alpha <- read.delim("../code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
 alphaSampleData <- merge(sampleData, alpha, by = 0)
+```
+
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Effective.Richness)) +
+  geom_histogram(binwidth = 3) +
+  theme_classic()
+```
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Simpson.Effective, y = Shannon.Effective)) +
+  geom_point()
 ```
 
 

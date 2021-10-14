@@ -1,0 +1,242 @@
+---
+title: "5_step_1"
+author: "stinekrye"
+date: "2021-10-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: inline
+---
+
+## Introduction
+
+The purpose of this script is to illustrate the workflow of how to produce/explore the following:  
+- 2.3.2.1: Remove singletons, unwanted sequences and negative controls  
+- 2.3.2.2: Normalize data and removal of samples with low count (Using Rhea)  
+- 2.3.3: Alpha diversity  (also include pcr data. correlation of index and pcr abundance), (bacteria, chloroplast).  
+
+
+
+### Load data and libraries
+
+```{r, message = FALSE, warnings = FALSE}
+library(tidyverse)
+library(readxl)
+library(phyloseq)
+library(vegan)
+
+
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+```
+
+### Subset data to include only samples from GF
+This is done to make the workflow / troubleshooting easier
+
+1. Create phyloseq object, which makes subsetting all three files easy.  
+2. Then subset.
+```{r}
+asvTable <- otu_table(asvTable, taxa_are_rows = TRUE)
+sampleData <- sample_data(sampleData)
+taxaId <- tax_table(as.matrix(taxaId))
+phyloData <- phyloseq(asvTable,sampleData, taxaId)
+
+
+gfData <- subset_samples(phyloData, region == "GF")
+gfData <- subset_samples(gfData, type == "insitu")
+
+
+GF_asvTable <- as.data.frame(otu_table(gfData))
+GF_sampleData <- as.data.frame(sample_data(gfData))
+GF_taxaId <- as.data.frame(tax_table(taxaId))
+```
+
+### Create the input file for Rhea
+
+The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy.
+
+oil_ASVtable needs a taxonomy column.
+```{r}
+taxo <- GF_taxaId
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+# write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+head(rhea_GF_asvTable)[124:126]
+```
+
+
+
+## 2.3.2.1 Remove singletons, unwanted sequences and negative controls
+First we need to remove singletons, chloroplast and mitochondrial species, and negatibe controls.
+- Ioannis have removed singletons, chloroplast and mitocondrial species
+- We have no negative controls in the in situ samples. By negative controls I mean a control which has not been in contact with any bacteria, but has been sequences to investigate the amount of "background noise" from the project.
+
+
+## 2.3.2.2 Normalization and removal of samples with low count 
+
+### Rhea Workflow
+Run two times:  
+- First time to identify underrepresented samples, which has to be removed  
+- Second time the analysis is made based on the updated OTU table.  
+  
+#### First Rhea run  
+
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "oil_ASVtable_RHEA.txt"
+labelCutoff <- 10 
+
+```{r, message = FALSE, warning = FALSE}
+# source("../code/Rhea-master/1.Normalization/Normalization_before_cut.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+  
+    
+> How do you usually Use the slope of the rarefaction curve to decide cut-off? How do decide on value + how to do it in R  
+  
+- My idea: Make a plot which enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
+- Ioannis suggests only to remove those with a read count below 10000
+
+```{r}
+
+rslope <- read.delim("./code/Rhea-master/1.Normalization/1_RarefactionCurve.TAB", sep = "\t", check.names = F)
+
+rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
+  geom_point() +
+  ylim(0, 2) +
+  theme_classic()+
+  theme(axis.text.x=element_blank())+
+  xlab("SampleID (reordered)") +
+  ylab("Slope of rarefaction curve")
+
+```
+
+
+
+  
+  
+Find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.  
+```{r}
+# Cut away samples based on too low count.
+too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
+```
+  
+  
+Remove those samples from the phyloseq object, so we can use it to generate a new input file for Rhea
+```{r}
+# Cut away unwanted sequences
+unwanted <- too_low_sample_size
+wanted <- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
+gfDataCut <- prune_samples(wanted,gfData)
+```
+  
+  
+Make new Rhea file
+```{r}
+taxo <- as.data.frame(tax_table(taxaId))
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(otu_table(gfDataCut)), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+# write.table(rhea_GF_asvTable, file = "oil_ASVtable_RHEA_CUT.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+```
+
+#### Second Rhea run  
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "oil_ASVtable_RHEA_CUT.txt"
+labelCutoff <- 5 
+
+```{r, message = FALSE, warning = FALSE}
+# source("../code/Rhea-master/1.Normalization/Normalization.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+  
+The output file with normalized read counts is used in the next step
+
+
+
+## 2.3.3.1 Calculate Alpha diversity
+
+### Follow the Rhea workflow
+Use the normalized read counts
+
+```{r, message = FALSE, warning = FALSE}
+# source("../code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+
+### Visualization of alpha diversity
+Idea: 
+Make two plots:
+- One with qPCR abundance values against both of the effective indexes (color coded)
+- One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)
+
+  
+Merge the sampleData and the alpha-diversity measures in one table to make plotting easier
+```{r}
+alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alphaSampleData <- merge(sampleData, alpha, by = 0)
+```
+
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Effective.Richness)) +
+  geom_histogram(binwidth = 3) +
+  theme_classic()
+```
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Simpson.Effective, y = Shannon.Effective)) +
+  geom_point()
+```
+
+
+
+#### Plot type 1: Show richness in different groups
+The data is seperated into in situ vs. SW and then additionally seperated into deep, sediment and surface
+
+```{r}
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_violin(aes(fill = location)) +
+  theme_minimal() +
+  facet_wrap("type")
+
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_jitter(aes(color = oil)) +
+  theme_minimal() +
+  facet_wrap("type")
+
+alphaSampleData %>% ggplot(mapping = aes(x = location, y = Simpson.Effective)) +
+  geom_jitter(aes(color = Evenness)) +
+  theme_minimal() +
+  facet_wrap("type")
+```
+  
+> How can it make sense that the blanks has high alpha diversity, when Shannon and Simpson index is used? 
+
+When using effective richness (enumeration) the distribution looks random. Does this show that the samples with oils might be dominated by a few species?
+  
+* Notes on Simpson: Look up the formula. Takes the number of species and their abundance into account. A sample with large evenness is considered more diverse than a sample dominated by a few species (possible enrichment) *  
+  
+* Notes on Shannon: H = (Relative proportion of species * the natural logarithmic function of that relative proportion) summed over all species. Evenness is H / ln(S) where S is the total number of species in that sample. Low evenness means that a few species dominate *
+
+
+#### Plot type 2: Visualize the relationsship between alpha-diversity and cPCR numbers
+The y axis is log scale. This seperates the points better.
+  
+> Is it bad to have a correlation? Could that mean a correlation between the size of the sample and the richness? If we have no correlation, does that mean that the effective richness does not depend so much on sample size?
+
+```{r}
+alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) + 
+  #geom_point(aes(x = Shannon.Effective, color = "Shannon")) +
+  geom_point(aes(x = Simpson.Effective, color = "Simpson")) +
+  scale_y_log10() +
+  #xlim(0,100) +
+  NULL
+```
+
+  
+> Maybe do the same with phyloseq?

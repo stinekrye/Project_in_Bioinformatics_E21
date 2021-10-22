@@ -25,7 +25,7 @@ library(phyloseq)
 library(vegan)
 
 
-sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+sampleData <- read_excel("../data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
 asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
 taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
 ```
@@ -240,3 +240,14 @@ alphaSampleData %>% ggplot(mapping = aes(y = QPCRCopies)) +
 
   
 > Maybe do the same with phyloseq?
+
+
+```{r}
+test <- read.delim("../code/Rhea-master/2.Alpha-Diversity/OTUs_Table-norm.tab", sep = "\t", row.names = "X")
+
+test <- as.data.frame(test)
+
+test2 <- colSums(test)
+```
+
+C:\Users\ASUS\Google Drev\AU\Aktuelle\PiB\Project_in_Bioinformatics_E21\code\Rhea-master\2.Alpha-Diversity

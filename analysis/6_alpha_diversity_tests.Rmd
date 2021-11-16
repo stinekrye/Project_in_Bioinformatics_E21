@@ -73,9 +73,9 @@ Test type: I have choosen to perform a permutation test. Even though the distrib
 testdata1 <- alphaSampleData_wo_dub %>% select(c("oil", "Shannon.Effective"))
 
 oilGr <- testdata1$Shannon.Effective[testdata1$oil != "blank"]
-oilMedian <- mean(na.omit(oilGr))
+oilMedian <- median(na.omit(oilGr))
 blankGr <- testdata1$Shannon.Effective[testdata1$oil == "blank"]
-blankMedian <- mean(na.omit(blankGr))
+blankMedian <- median(na.omit(blankGr))
 true_value <- blankMedian - oilMedian
 
 
@@ -88,9 +88,9 @@ for (i in 1:length(r)) {
   a <- sample(alpha)
   
   oilGr <- a[oil != "blank"]
-  oilMedian <- mean(na.omit(oilGr))
+  oilMedian <- median(na.omit(oilGr))
   blankGr <- a[oil == "blank"]
-  blankMedian <- mean(na.omit(blankGr))
+  blankMedian <- median(na.omit(blankGr))
   r[i] <- blankMedian - oilMedian
   
 if(i%%10000==0) {   # Progress tracker

@@ -26,6 +26,12 @@ asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs"
 taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
 ```
 
+```{r}
+barplot(sampleData, col = QPCR)
+```
+
+
+
 
 ## 1. Create phyloseq object, which makes subsetting all three files easy.  
 And then subset.
@@ -311,7 +317,7 @@ length(total_counts[1] == 100)
 Filter based on the threshold from Rhea.
 Note that this might be too high!
 
-
+I have lost the rownames
 ```{r}
 cut = c(0.1, 0.3, 0.5)
 for (i in cut){
@@ -336,7 +342,7 @@ for (i in cut){
   # Create table where all empty rows are removed
   no_empty_rows_or_singles <- test[rowSums(test, na.rm = TRUE) > 1,]
   assign(paste("GF_asvTable_low_cut_",i,"_no_empty_NA", sep = ""), no_empty_rows_or_singles)
-  write.table(no_empty_rows_or_singles, file = paste("GF_asvTable_low_cut_",i,"_no_empty_NA.txt", sep = ""), sep = "\t", quote = F)
+  # write.table(no_empty_rows_or_singles, file = paste("GF_asvTable_low_cut_",i,"_no_empty_NA.txt", sep = ""), sep = "\t", quote = F)
 
   print(i)
 }

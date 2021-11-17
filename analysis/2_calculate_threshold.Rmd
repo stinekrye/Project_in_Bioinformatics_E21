@@ -1,0 +1,191 @@
+---
+title: "2_calculate_threshold"
+author: "stinekrye"
+date: "2021-11-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+Use the knowledge about the technical replicates to deduce a threshold
+
+Steps:
+- Make rarefaction curve to figure out which technical replicates are good enough to keep
+- Normalize both samples between 0 and 1
+- Make logit transformation
+- Compare samples: Calculate mean and stdev
+- Make a plot where mean is on the x axis and stddev is on the y axis
+- See where the stddeev levels off. Use that mean value to calculate the cut-off from where I do not trust the data anymore. Reverse the logit transformation.
+
+Load data and libraries
+```{r}
+library(tidyverse)
+library(phyloseq)
+library(gtools)
+library(reshape2)
+library(ggpubr)
+
+
+GF_sampleData <- read.delim("./data/GF_sampleData.txt") #%>% column_to_rownames(., var = "Samples")
+GF_asvTable <- read.delim("./data/GF_ASVtable.txt", sep = "\t", check.names = F) #%>% select(., -'row.names')
+GF_taxaId <- read.delim("./data/GF_taxaId.txt", sep = "\t") #%>% select(., -'row.names')
+```
+
+
+## Make rarefaction curve
+
+
+```{r}
+# taxo <- GF_taxaId
+# taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+# taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+# rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
+# rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+# write.table(rhea_GF_asvTable, file = "GF_ASVtable_RHEA_thresh.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+# head(rhea_GF_asvTable)[124:126]
+```
+
+
+I have changed the RHEA script so the normalized relative abundances sum to 1
+```{r, message = FALSE, warning = FALSE}
+# source("./code/Rhea-master/1.Normalization/Normalization_get_thresh.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+
+Read in file with relative abundances
+```{r}
+GF_asvTable_rel_ab <- read.delim("./code/Rhea-master/1.Normalization/OTUs_Table-norm-rel_thresh.TAB", sep = "\t", check.names = F, row.names = "")
+```
+
+They sum to one!
+```{r}
+total_counts <- as.data.frame(colSums(GF_asvTable_rel_ab[-1]))
+```
+
+
+Figure out which replicates to keep:
+
+```{r}
+# Find replicates
+GF_sampleData$rowname <-rownames(GF_sampleData)
+GF_replicates_sampleData <- GF_sampleData %>% group_by(sampleName) %>% filter(n()>1)
+GF_replicates_asvTable <- GF_asvTable_rel_ab[,colnames(GF_asvTable_rel_ab) %in% GF_replicates_sampleData$rowname ] # Some in this list is not in the rel_ab table, so they have been removed
+
+# Find samples with too low sample size
+too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
+
+# Find the replicates with sufficient sample size
+GF_replicates_sampleData <- GF_replicates_sampleData[!GF_replicates_sampleData$rowname %in% too_low_sample_size,]
+GF_replicates_asvTable <- GF_replicates_asvTable[,!colnames(GF_replicates_asvTable) %in% too_low_sample_size]
+
+
+# Remove those which no longer have a duplicate
+GF_replicates_sampleData_size_ok <- GF_replicates_sampleData %>% group_by(sampleName) %>% filter(n()>1)
+GF_replicates_asvTable_size_ok <- GF_replicates_asvTable %>% select(GF_replicates_sampleData_size_ok$rowname)
+
+# Drop empty rows
+GF_replicates_asvTable_rel_size_ok <- GF_replicates_asvTable_size_ok[rowSums(GF_replicates_asvTable_size_ok) > 0,]
+```
+
+Produce table with logit trans, sd, mean, which can be used for plotting
+```{r}
+# Extract identifiers
+identifiers <- GF_replicates_sampleData_size_ok %>% select(rowname, sampleID)
+
+# Transpose table so I can merge by columns
+table <- as.data.frame(t(GF_replicates_asvTable_rel_size_ok))
+table <- merge(table, identifiers, by.x = 0, by.y = "rowname", all.x = TRUE)
+
+# Clean up tabæle, so it only contains ASV abundance values and sample ID
+table <- table %>% select(-sampleName) # drop column
+table <- table %>%
+  select(Row.names, sampleID, everything()) #Rearrange columns
+table <- column_to_rownames(table, var = "Row.names")
+table <- as.data.frame(t(table)) # Transpose so asvs are rows and samples are columns
+
+
+
+# For each col in table make a new col called logit(name)
+length = ncol(table)
+for (i in 1:length) #
+  {
+  # Get names + identifier
+  name <- colnames(table[i])
+  identifier <- table[1,i]
+  
+  # Do the logit calculation
+  # m <- lapply(table[2:nrow(table),i], function(x) x+0.01) # DEAL WITH THIS
+  m <- lapply(table[2:nrow(table),i], function(x) log(((x+0.000001-0)/(1-0))/(1-(x-0)/(1-0)))) #+0.000001
+  
+  # Merge identifiers and m, and ensure the right orientation
+  m <- t(as.data.frame(c(identifier,m)))
+  
+  # Assign the right name to m
+  assign(paste("logit_", name, sep = ""),colnames(m))
+  
+  #Bind m to the table
+  table <- cbind(table,m)
+}
+```
+
+
+```{r}
+
+# Calculate the mean and std for each pairs of duplicates
+# First identify duplicates
+logit_table <- as.data.frame(t(table[17:32]))
+
+# Prepare df to dcast by pivoting it longer
+test <- gather(logit_table, -sampleID, key = "ASV", value = "Abundance")
+
+# Calculate mean and sd using dcast + combine the dataframes
+means <- test %>% dcast(., sampleID ~ ASV, value.var = "Abundance", mean)
+sds <- test %>% dcast(., sampleID ~ ASV, value.var = "Abundance", sd)
+means$type <- "mean"
+sds$type <- "sd"
+data <- rbind(means,sds)
+
+
+# Prepare data for plotting. I want one column with sd and another with mean
+data1 <- data %>% pivot_longer(cols = starts_with("ASV"))
+data2 <- data1 %>% pivot_wider(names_from = "type", values_from = "value")
+
+
+# Remove infinite values arising from zeroes
+# test <- data2[(data2$mean > -10),]
+```
+
+
+```{r}
+data2 %>% ggplot(mapping = aes(x = mean, y = sd))+ # V1 is mean and V2 is std dev
+  geom_point(aes(color = factor(sampleID)))+
+  geom_smooth(method = lm)+
+  stat_cor(aes(color = sampleID), method = "pearson", label.x = -5)+
+  xlab("Mean")+
+  ylab("Standard deviation")+
+  guides(color=guide_legend(title="Sample"))+
+  theme_classic()
+```
+
+
+```{r}
+
+data2$sampleID <- factor(data2$sampleID)
+
+data2 %>% ggscatter(x = "mean", y = "sd",
+          add = "reg.line",                                 # Add regression line
+          # conf.int = TRUE,                                  # Add confidence interval
+          color = "sampleID", palette = "jco",           # Color by groups "cyl"
+          # shape = "sampleID"
+          )+
+  stat_cor(aes(color = sampleID), method = "pearson", label.x = -3)  # Add correlation coefficient
+```
+
+
+
+
+```{r}
+inv.logit(-8)
+```
+

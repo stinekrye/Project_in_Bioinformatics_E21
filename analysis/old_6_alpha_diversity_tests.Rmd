@@ -1,0 +1,172 @@
+---
+title: "5_step_2"
+author: "stinekrye"
+date: "2021-10-13"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+The purpose of this script is to explore the alpha diversity
+
+
+### Load data and libraries
+
+```{r, message = FALSE, warnings = FALSE}
+library(tidyverse)
+library(readxl)
+library(phyloseq)
+library(vegan)
+library(rstatix)
+
+
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alphaSampleData <- merge(sampleData, alpha, by = 0)
+alphaSampleData <- column_to_rownames(alphaSampleData, "Row.names")
+
+sampleData <- sampleData %>% filter(rownames(.) %in% rownames(alpha))
+asvTable <- as.data.frame(t(asvTable)) %>% filter(rownames(.) %in% rownames(alpha))
+asvTable <- t(otu_table(asvTable, taxa_are_rows = F))
+```
+
+### Deal with technical duplicates
+
+They have same sample name, so they can be dealt with easily
+
+```{r}
+# test <- alphaSampleData %>% mutate("Name_wo_dups" = substr(sampleName, 1, nchar(sampleName)-2))
+alphaSampleData_wo_dub <- alphaSampleData %>% group_by(sampleName) %>% summarize(location = location,
+                                                                                 days = days,
+                                                                               oil = oil,
+                                                                               lightDark = lightDark,
+                                                                               replicate = replicate,
+                                                                               QPCRCopies = mean(na.omit(QPCRCopies)),
+                                                                               QPCR_SD = mean(na.omit(QPCR_SD)), 
+                                                                               Richness = mean(na.omit(Richness)),
+                                                                               Normalized.Richness = mean(na.omit(Normalized.Richness)),
+                                                                               Effective.Richness = mean(na.omit(Effective.Richness)),
+                                                                               Shannon.Index = mean(na.omit(Shannon.Index)),
+                                                                               Shannon.Effective = mean(na.omit(Shannon.Effective)),
+                                                                               Simpson.Index = mean(na.omit(Simpson.Index)),
+                                                                               Simpson.Effective = mean(na.omit(Simpson.Effective)),
+                                                                               Evenness = mean(na.omit(Evenness)))
+                                                                               # Is it ok to deal with SD like this?
+alphaSampleData_wo_dub <- alphaSampleData_wo_dub %>% distinct()
+```
+
+
+### Deal with field duplicates
+
+> Do I have to average the value of those as well? (I mean the samples with name differ by only _1 vs _2)
+
+
+
+### Test 1: Blanks vs. oil
+Motivation: Last weeks plots showed a large variation in the blanks and a small variance in all the other samples
+Test type: I have choosen to perform a permutation test. Even though the distribution og alpha-diversity values are roughly bell shaped, the sample counts are just too small to ensure high power.
+
+```{r}
+testdata1 <- alphaSampleData_wo_dub %>% select(c("oil", "Shannon.Effective"))
+
+oilGr <- testdata1$Shannon.Effective[testdata1$oil != "blank"]
+oilMedian <- median(na.omit(oilGr))
+blankGr <- testdata1$Shannon.Effective[testdata1$oil == "blank"]
+blankMedian <- median(na.omit(blankGr))
+true_value <- blankMedian - oilMedian
+
+
+oil <- testdata1$oil
+alpha <- testdata1$Shannon.Effective
+
+r <- rep(NA,100000)  
+
+for (i in 1:length(r)) {
+  a <- sample(alpha)
+  
+  oilGr <- a[oil != "blank"]
+  oilMedian <- median(na.omit(oilGr))
+  blankGr <- a[oil == "blank"]
+  blankMedian <- median(na.omit(blankGr))
+  r[i] <- blankMedian - oilMedian
+  
+if(i%%10000==0) {   # Progress tracker
+  cat(i, "\n")
+  flush.console()
+}
+}
+
+pd <- tibble(i=1:length(r), value=r)
+```
+
+
+The plot is centered around the mean. Approximate null distribution
+
+> How does this look? If the mean is used we get a pretty bell shape. Median gives an ugly figure
+
+```{r}
+pd %>% 
+  ggplot(aes(x=value)) +
+  geom_histogram(binwidth = 1)+
+  NULL
+```
+
+Calculate the probability of observing the true value
+
+sum(abs(permuted >= obs)) 
+This will give us the p value if we divide it by the total number of permutations
+
+I will not do sum(permuted >= obs) * 2 because the tails look unsymmetrical
+
+```{r}
+extreme <- sum(abs(pd$value) >= true_value)
+pval <- (extreme + 1)/length(r)
+pval
+```
+
+We reject the H0 of no difference between the medians of the two groups.
+
+### Test 2: Compare different locations
+
+I will try to use repeated measure ANOVA to compare the alpha diversity at different locations
+
+```{r}
+testdata2 <- alphaSampleData_wo_dub %>% select(c("location", "lightDark", "oil", "Shannon.Effective"))
+
+testdata2 %>%  group_by(location, lightDark) %>% identify_outliers(variable = "Shannon.Effective")
+
+
+
+# qqnorm(log10(testdata2$Shannon.Effective), pch = 1, frame = FALSE)
+# qqline(log10(testdata2$Shannon.Effective), col = "steelblue", lwd = 2)
+# shericity <- anova_test(testdata2, formula = Shannon.Effective ~ as.factor(location))
+```
+
+
+*Assumptions*
+No outliers -> use identify_outliers
+Normaldistributed -> The data is not normally distributed at all. the log10 numbers are closer
+
+
+Check for outliers:
+```{r}
+t <- testdata2 %>%  group_by(location) %>% identify_outliers(variable = "Shannon.Effective")
+extreme <- t$sampleName[t$is.extreme == TRUE]
+testdata2 <- testdata2 %>% filter(!sampleName %in% extreme)
+```
+We have some extreme outliers which has to be removed
+I guess they have to be included again?
+
+
+
+
+Check for normal distribution:
+```{r}
+testdata2 <- testdata2 %>%  mutate("Shannon.Effective.Log10" = log10(Shannon.Effective))
+testdata2 %>%  group_by(location) %>% shapiro_test(Shannon.Effective.Log10)
+```
+If we log10 transform the data almost all groups are normal distributed. If the surface group is combined into one all groups are normal distributed
+

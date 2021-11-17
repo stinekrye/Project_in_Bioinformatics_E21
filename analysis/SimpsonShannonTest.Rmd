@@ -1,0 +1,203 @@
+---
+title: "SimpsonShannonTest"
+author: "stinekrye"
+date: "2021-10-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+```
+
+
+
+```{r}
+species = c(1,10, 50, 100, 300, 500, 800, 1000, 1500, 2000, 5000)
+# species = c(1,5, 10)
+eveness = c(0.01,0.1, 1) # ,0.5,1
+size = 100000
+```
+
+```{r}
+data <- data.frame(Eveness = double(), N.Species = integer(), Richness = integer(), Shannon = double(), Shannon.Eff = double(), Simpson = double(), Simpson.Eff = double())
+counter = 0
+for (i in species){
+  
+  for (j in eveness){
+    
+    counter <- counter + 1                                    # Counter used to build rows
+    data[counter, ] <- NA                                     # Build new row
+    tab <- data.frame(matrix(ncol = i, nrow = 1))             # Create table used to simulate sample
+    
+    
+    if (j == 1 | i == 1) {                                    # Simulate sample
+      tab[,1:i] <- size/i                                     # If sample size is 1 or eveness is one we distribute the counts evenly
+    } else {                                                  # Otherwise we make an uneven distributen
+      split1 <- ceiling(i*j)                                            
+      print(split1)
+      tab[,1:split1] <- (size*0.8)/split1                           # Assign 80 % of the counts to the eveness percentage
+      
+      split2 = split1 + (i-split1)%/%2
+      
+      tab[,(split1+1):split2] <- (size*0.01)/(split2-split1)         # Assign 20 % of the counts to the rest
+      
+      split3 = split2 + (i-split2)%/%2
+      
+      tab[,(split2+1):split3] <- (size*0.03)/(split3-split2)
+      tab[,(split3+1):i] <- (size*.16)/(split3-split2)
+      # print("splits")
+      # print(split1)
+      # print((split2-split1))
+      # print((split3-split2))
+      
+    }
+    # print(i)
+    # print(tab)
+    data[counter, ]$N.Species <- i
+    data[counter, ]$Eveness <- j
+    data[counter, ]$Richness <- Species.richness(tab)
+    data[counter, ]$Shannon <- Shannon.entropy(tab)
+    data[counter, ]$Shannon.Eff <- Shannon.effective(tab)
+    data[counter, ]$Simpson <- Simpson.concentration(tab)
+    data[counter, ]$Simpson.Eff <- Simpson.effective(tab)
+    
+    
+  }
+
+}
+colnames(data)[1] <- "Evenness"
+```
+
+
+Plot Shannon
+
+```{r}
+
+data %>% ggplot(mapping = aes(x = N.Species)) +
+  geom_line(aes(y = Shannon, color = factor(Evenness))) +
+  theme_classic() +
+  scale_x_continuous(limits = c(2, NA)) +
+  # coord_cartesian(xlim = c(2,10), ylim = c(0,9)) +
+  xlab("Number of ASVs") +
+  labs(color = "Evenness") +
+  scale_color_manual(values=c("#56B4E9", "#E69F00", "#999999")) +
+  NULL
+  
+```
+
+
+Plot Simpson
+```{r}
+data %>% ggplot(mapping = aes(x = N.Species, y = 1-Simpson)) +
+  geom_line(aes(color = factor(Evenness))) +
+  theme_classic() +
+  xlim(2,5000) +
+  xlab("Number of ASVs") +
+  labs( color = "Evenness") +
+  scale_color_manual(values=c("#56B4E9", "#E69F00", "#999999")) +
+  NULL
+  
+```
+
+
+Plot shannon vs. simpson
+```{r}
+data$Evenness <- factor(data$Evenness)
+data$"1-Simpson" <- 1-data$Simpson
+
+data %>% ggscatter(x = "1-Simpson", y = "Shannon",
+          add = "reg.line",                                 # Add regression line
+          # conf.int = TRUE,                                  # Add confidence interval
+          color = "Evenness", palette = "jco",           # Color by groups "cyl"
+          shape = "Evenness"
+          )+
+  stat_cor(aes(color = Evenness), method = "pearson", label.x = 0.5)  # Add correlation coefficient
+```
+
+
+
+Plot Effective numbers
+
+```{r}
+data %>% ggplot(mapping = aes(x = N.Species)) +
+  geom_line(aes(y = Simpson.Eff, color = factor(Evenness), linetype = "Simpson.Eff"), size = 1) +
+  geom_line(aes(y = Shannon.Eff, color = factor(Evenness), linetype = "Shannon.Eff"), size = 1) +
+  theme_classic() +
+  xlab("Number of ASVs") +
+  ylab("Effective number of species") +
+  labs(color = "Evenness", linetype = "Index") +
+  xlim(2,5000) +
+  scale_color_manual(values=c("#56B4E9", "#E69F00", "#999999")) +
+  NULL
+```
+
+Functions
+
+
+```{r}
+# Calculate the species richness in a sample
+Species.richness <- function(x)
+{
+  # Count only the OTUs that are present >0.5 normalized counts (normalization produces real values for counts)
+  count=sum(x[x>0.5]^0)
+  return(count)
+}
+
+# Calculate the Effective species richness in each individual sample
+Eff.Species.richness <- function(x)
+{
+  # Count only the OTUs that are present more than the set proportion
+  total=sum(x)
+  count=sum(x[x/total>eff.cutoff]^0)
+  return(count)
+}
+
+# Calculate the Normalized species richness in each individual sample
+Norm.Species.richness <- function(x)
+{
+  # Count only the OTUs that are present >0.5 normalized counts (normalization produces real values for counts)
+  # Given a fixed Normalization reads depth
+  total=sum(x)
+  count=sum(x[norm.cutoff*x/total>0.5]^0)
+  return(count)
+}
+
+
+# Calculate the Shannon diversity index
+Shannon.entropy <- function(x)
+{
+  total=sum(x)
+  se=-sum(x[x>0]/total*log(x[x>0]/total))
+  return(se)
+}
+
+# Calculate the effective number of species for Shannon
+Shannon.effective <- function(x)
+{
+  total=sum(x)
+  se=round(exp(-sum(x[x>0]/total*log(x[x>0]/total))),digits =2)
+  return(se)
+}
+
+# Calculate the Simpson diversity index
+Simpson.concentration <- function(x)
+{
+  total=sum(x)
+  si=sum((x[x>0]/total)^2)
+  return(si)
+}
+
+# Calculate the effective number of species for Simpson
+Simpson.effective <- function(x)
+{
+  total=sum(x)
+  si=round(1/sum((x[x>0]/total)^2),digits =2)
+  return(si)
+}
+```
+

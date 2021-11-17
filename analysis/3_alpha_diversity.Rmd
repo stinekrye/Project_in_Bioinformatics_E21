@@ -1,0 +1,55 @@
+---
+title: "2_alpha_diversity"
+author: "stinekrye"
+date: "2021-11-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Calculate alpha diversity from the clean data
+
+```{r}
+
+```
+
+
+## 2.3.3.1 Calculate Alpha diversity
+
+### Follow the Rhea workflow
+Use the normalized read counts
+
+BE AWARE TO CHANGE THE CUT-OFF VALUES ACCORDINGLY! By default it is 0.5
+It also uses the normalized table with empty rows. But it can deal with that
+```{r, message = FALSE, warning = FALSE}
+source("./code/Rhea-master/2.Alpha-Diversity/Alpha-Diversity.R")
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+
+### Visualization of alpha diversity
+Idea: 
+Make two plots:
+- One with qPCR abundance values against both of the effective indexes (color coded)
+- One with one of the effective indexes against the sample name. The point has to be colored in accordance to some grouping Eg. (1st grouping: in situ + sea water, 2nd grouping: Deep, sediment, surface)
+
+  
+Merge the sampleData and the alpha-diversity measures in one table to make plotting easier
+```{r}
+alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alphaSampleData <- merge(sampleData, alpha, by = 0)
+```
+
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Effective.Richness)) +
+  geom_histogram(binwidth = 3) +
+  theme_classic()
+```
+
+```{r}
+alpha %>% ggplot(mapping = aes(x = Simpson.Effective, y = Shannon.Effective)) +
+  geom_point()
+```
+

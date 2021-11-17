@@ -1,0 +1,39 @@
+---
+title: "7_beta_diversity"
+author: "stinekrye"
+date: "2021-10-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+
+
+
+### Load data and libraries
+
+```{r, message = FALSE, warnings = FALSE}
+library(tidyverse)
+library(readxl)
+library(phyloseq)
+library(vegan)
+library(rstatix)
+
+
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+alpha <- read.delim("./code/Rhea-master/2.Alpha-Diversity/alpha-diversity.TAB", sep = "\t", check.names = F, row.names = 1)
+alphaSampleData <- merge(sampleData, alpha, by = 0)
+alphaSampleData <- column_to_rownames(alphaSampleData, "Row.names")
+
+sampleData <- sampleData %>% filter(rownames(.) %in% rownames(alpha))
+asvTable <- as.data.frame(t(asvTable)) %>% filter(rownames(.) %in% rownames(alpha))
+asvTable <- t(otu_table(asvTable, taxa_are_rows = F))
+
+rm(alpha)
+rm(sampleData)
+```
+

@@ -1,0 +1,346 @@
+---
+title: "1_data_cleanup"
+author: "stinekrye"
+date: "2021-11-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I have been starting over a few times, but this is the file, which has to be a part of the final project.
+
+
+Import data + libraries
+
+```{r, message = FALSE, warnings = FALSE}
+library(tidyverse)
+library(readxl)
+library(phyloseq)
+library(vegan)
+
+
+sampleData <- read_excel("./data/sampleData.xlsx") %>% column_to_rownames(., var = "Samples")
+asvTable <- read.delim("./data/oil_ASVtable.txt", sep = "\t", row.names = "ASVs", check.names = F) #%>% select(., -'row.names')
+taxaId <- read.delim("./data/oil_ASVtaxid.txt", sep = "\t", row.names = "ASVs") %>% select(., -'row.names')
+```
+
+
+## 1. Create phyloseq object, which makes subsetting all three files easy.  
+And then subset.
+```{r}
+asvTable <- otu_table(asvTable, taxa_are_rows = TRUE)
+sampleData <- sample_data(sampleData)
+taxaId <- tax_table(as.matrix(taxaId))
+phyloData <- phyloseq(asvTable,sampleData, taxaId)
+
+
+gfData <- subset_samples(phyloData, region == "GF")
+gfData <- subset_samples(gfData, type == "insitu")
+
+
+GF_asvTable <- as.data.frame(otu_table(gfData))
+GF_sampleData <- as.data.frame(sample_data(gfData))
+GF_taxaId <- as.data.frame(tax_table(taxaId))
+# write.table(GF_asvTable, "GF_asvTable.txt", sep = "\t", quote = F)
+# write.table(GF_taxaId, "GF_taxaId.txt", sep = "\t", quote = F)
+# write.table(GF_sampleData, "GF_sampleData.txt", sep = "\t", quote = F)
+rm(list = ls())
+GF_sampleData <- read.delim("./data/GF_sampleData.txt") #%>% column_to_rownames(., var = "Samples")
+GF_asvTable <- read.delim("./data/GF_ASVtable.txt", sep = "\t", check.names = F) #%>% select(., -'row.names')
+GF_taxaId <- read.delim("./data/GF_taxaId.txt", sep = "\t") #%>% select(., -'row.names')
+```
+
+
+## 2. Deal with empty ASVs and technical replicates. Which ones should I keep?
+### 2A Identify those duplicates to be removed
+I would like to compare the QPCR values with the total read count and use that as a basis to decide which replicates to keep
+
+```{r}
+# Get the replicates by their sampleName
+GF_sampleData$rowname <-rownames(GF_sampleData)
+GF_replicates_sampleData <- GF_sampleData %>% group_by(sampleName) %>% filter(n()>1)
+GF_replicates_asvTable <- GF_asvTable %>% select(GF_replicates_sampleData$rowname)
+
+# 15 samples have a replicate = 30 total samples
+
+
+
+# Calculate total ASv count for each replicated sample
+asv <- as.data.frame(t(GF_replicates_asvTable)) # samples are rows
+asv$rowsums <- rowSums(asv) #Total ASV count in each sample
+
+# Make new columns in the asv table, so I can make plots
+identifiers <- GF_replicates_sampleData %>% select(rowname, sampleID, month)
+plot_ASV <- merge(asv, identifiers, by.x = 0, by.y = "rowname")
+
+```
+
+
+Visualization of replicates
+Plot where the x axis is the sampleID and the y axis is total read count (QPCR). The fill is the month of where it was sequenced. A sample can be identified using the sample id + month.
+
+```{r}
+test <- GF_replicates_sampleData[!is.na(GF_replicates_sampleData$QPCRCopies),]
+test %>% ggplot(aes(fill = month, y = QPCRCopies, x = factor(sampleID)))+
+  geom_bar(position = "stack", stat = "identity")+
+  ggtitle("Total read count (QPCR) for each sample") +
+  scale_fill_manual(name = "Month of\nsequencing", values=c("#999999", "#E69F00", "#56B4E9")) +
+  theme_classic() +
+  xlab("Sample ID")
+  
+```
+
+
+Plot of total ASV count vs sampleID. The fill is the month of where it was sequenced. A sample can be identified using the sample id + month.
+
+```{r}
+plot_ASV %>% ggplot(aes(fill = month, y = rowsums, x = factor(sampleID)))+
+  geom_bar(position = "stack", stat = "identity")+
+  ggtitle("Sum of ASVs for each sample") +
+  scale_fill_manual(name = "Month of\nsequencing", values=c("#999999", "#E69F00", "#56B4E9")) +
+  theme_classic() +
+  ylab("ASV total count")+
+  xlab("Sample ID")
+```
+
+It looks like some samples with the lowest Q pcr has the highest ASV total count
+The nas must be omitted from the first plot, but are found in the second plot
+
+### 2B The removal of the duplicates with lowest ASV count
+
+Make new datasets w.o. the duplicates
+ - Identify duplicates and make a list of their names
+ - Omit them from both the GF_sampleData and the GF_asvTable 
+ 
+
+Steps:
+- Using plot_ASV I want to extract the rowname of the duplicated samples with the smallest ASV count
+- Then I will use that list to extract all but those from the GF_asvTable columns, and GF_sampleData rows.
+- Then I will create the new files w.o. duplicates.
+
+```{r}
+# Sort based on total ASV count. 
+test <- plot_ASV[order(plot_ASV$rowsums),]
+
+# Extract names of those which must be removed. These are the smallest ones
+small_reps <- test$Row.names[duplicated(test$sampleID, fromLast = T)]
+
+# Extract all but the small duplicated data points from the data
+GF_sampleData_no_dub <- GF_sampleData[!rownames(GF_sampleData) %in% small_reps,]
+GF_asvTable_no_dub <- GF_asvTable[,!colnames(GF_asvTable) %in% small_reps]
+
+```
+
+Remove all empty rows in the ASV file and write files
+Remove all empty columns in the metadata file
+```{r}
+# Drop empty ASVs (rows)
+GF_asvTable_no_dub <- GF_asvTable_no_dub[rowSums(GF_asvTable_no_dub) > 0,]
+GF_asvTable_no_dub <- GF_asvTable_no_dub[rowSums(GF_asvTable_no_dub) > 1,]
+
+
+# Drop empty columns in the sampleData file
+GF_sampleData_no_dub <- GF_sampleData_no_dub[,!colSums(is.na(GF_sampleData_no_dub)) > 4] # drop rowname
+GF_sampleData_no_dub <- GF_sampleData_no_dub %>% select(-rowname)
+
+
+
+# write the files
+# write.table(GF_asvTable_no_dub, "GF_asvTable_no_dup.txt", sep = "\t", quote = F)
+# write.table(GF_sampleData_no_dub, "GF_sampleData_no_dup.txt", sep = "\t", quote = F)
+```
+
+
+
+## 3. inspect the files 
+See how they look and note down things that needs to be fixed
+
+Questions: Does the orientation of the asvTable matter? (now the rownames are the ASVs)
+- Check col and row names of the data (X)
+- Check dimensions of the data (X)
+
+
+```{r}
+rm(list = ls())
+GF_sampleData <- read.delim("./data/GF_sampleData_no_dup.txt")
+GF_asvTable <- read.delim("./data/GF_asvTable_no_dup.txt", sep = "\t", check.names = F)
+GF_taxaId <- read.delim("./data/GF_taxaId.txt", sep = "\t")
+
+GF_asvTable <- otu_table(GF_asvTable, taxa_are_rows = TRUE)
+GF_sampleData <- sample_data(GF_sampleData)
+GF_taxaId <- tax_table(as.matrix(GF_taxaId))
+GF_phyloData <- phyloseq(GF_asvTable, GF_sampleData, GF_taxaId)
+GF_phyloData
+
+```
+
+The data is now free from duplicates and empty ASVs
+
+## 4. Remove samples with too low read count + normalize reads
+This has to be based on the rarefaction curves. I will use the Rhea scripts for this
+
+Read data
+
+```{r}
+rm(list = ls())
+GF_sampleData <- read.delim("./data/GF_sampleData_no_dup.txt")
+GF_asvTable <- read.delim("./data/GF_asvTable_no_dup.txt", sep = "\t", check.names = F)
+GF_taxaId <- read.delim("./data/GF_taxaId.txt", sep = "\t")
+
+```
+
+### Create the input file for Rhea
+
+The table needed for Rhea is a tab seperated OTU/ASV table with ASVs as rownames and samplenames as columns. In addidtion to that, we need the taxonomy levels seperated with semicolons as the last column names "taxonomy.
+
+oil_ASVtable needs a taxonomy column.
+```{r}
+taxo <- GF_taxaId
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(GF_asvTable), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+# write.table(rhea_GF_asvTable, file = "GF_ASVtable_RHEA.txt", sep = "\t", quote = F) # Is moved to the Rhea folder
+head(rhea_GF_asvTable)[109:111]
+```
+
+
+### Rhea Workflow
+Run two times:  
+- First time to identify underrepresented samples, which has to be removed  
+- Second time the analysis is made based on the updated OTU table.  
+  
+#### First Rhea run  
+
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "GF_ASVtable_RHEA.txt"
+
+```{r, message = FALSE, warning = FALSE}
+# source("./code/Rhea-master/1.Normalization/Normalization.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+  
+    
+> How do you usually Use the slope of the rarefaction curve to decide cut-off? How do decide on value + how to do it in R  
+  
+- My idea: Make a plot which enables us to find the outliers and cut them away. The cut-off can be choosen based on a visual expection
+- Ioannis suggests only to remove those with a read count below 10000
+
+```{r}
+
+rslope <- read.delim("./code/Rhea-master/1.Normalization/RarefactionCurve.TAB", sep = "\t", check.names = F)
+
+rslope %>% ggplot(mapping = aes(x = reorder(SampleID, -slope), y = slope)) +
+  geom_point() +
+  ylim(0, 2) +
+  theme_classic()+
+  theme(axis.text.x=element_blank())+
+  xlab("SampleID (reordered)") +
+  ylab("Slope of rarefaction curve")
+
+```
+
+  
+  
+Find samples, which gets excluded based on a low number of total reads. This threshold cuts away samples with a size of 0-3. The lowest read counts after removal of those is just below 20000.  
+```{r}
+# Cut away samples based on too low count.
+too_low_sample_size <- colnames(GF_asvTable)[colSums(GF_asvTable) < 10000]
+```
+  
+  
+Remove those samples from the phyloseq object, so we can use it to generate a new input file for Rhea
+```{r}
+# Cut away unwanted sequences
+unwanted <- too_low_sample_size
+wanted <- colnames(GF_asvTable)[!colnames(GF_asvTable) %in% unwanted]
+
+GF_asvTable <- otu_table(GF_asvTable, taxa_are_rows = TRUE)
+GF_sampleData <- sample_data(GF_sampleData)
+GF_taxaId <- tax_table(as.matrix(GF_taxaId))
+GF_phyloData <- phyloseq(GF_asvTable, GF_sampleData, GF_taxaId)
+
+GF_phyloData <- prune_samples(wanted,GF_phyloData)
+```
+  
+  
+Make new Rhea file
+```{r}
+# create taxonomy column
+taxo <- as.data.frame(tax_table(GF_phyloData))
+taxo$taxonomy <- paste(taxo$Kingdom, taxo$Phylum, taxo$Order, taxo$Family, taxo$Class, taxo$Genus, taxo$V7, sep = ";") # concatenate rows
+taxo <- taxo %>% select(c(taxonomy))                                                                                   # make dataframe ready for merge
+rhea_GF_asvTable <- merge(as.data.frame(otu_table(GF_phyloData)), taxo, by = 0)                                                    # 0 = rownames
+rhea_GF_asvTable <- column_to_rownames(rhea_GF_asvTable, var = "Row.names")                                            # restore rownames
+write.table(rhea_GF_asvTable, file = "GF_asvTable_RHEA_CUT.txt", sep = "\t", quote = F)                                 # Is moved to the Rhea folder
+write.table(sample_data(GF_phyloData), "GF_sampleData_RHEA_CUT.txt", sep ="\t", quote = F)
+```
+
+#### Second Rhea run  
+The following has been changed in the Rhea Normalization.R file:
+setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21/code/Rhea-master/1.Normalization")
+file_name <- "GF_asvTable_RHEA_CUT.txt"
+
+```{r, message = FALSE, warning = FALSE}
+# source("./code/Rhea-master/1.Normalization/Normalization.R")
+# setwd("C:/Users/ASUS/Google Drev/AU/Aktuelle/PiB/Project_in_Bioinformatics_E21")
+```
+  
+The output file with normalized read counts is used in the next step
+
+## 5. Inspect normalized counts
+
+```{r}
+rm(list = ls())
+GF_sampleData <- read.delim("./data/GF_sampleData_RHEA_CUT.txt")
+GF_asvTable <- read.delim("./data/GF_OTUs_Table-norm-rel.TAB", sep = "\t", check.names = F)
+GF_taxaId <- read.delim("./data/GF_taxaId.txt", sep = "\t")
+```
+
+They all sum to 100!
+```{r}
+total_counts <- as.data.frame(colSums(GF_asvTable[-1]))
+length(total_counts[1] == 100)
+```
+
+## 6. removal of low abundance taxa
+
+Filter based on the threshold from Rhea.
+Note that this might be too high!
+
+
+```{r}
+cut = c(0.1, 0.3, 0.5)
+for (i in cut){
+  # Create tables where counts below threshold is zero
+  test <- GF_asvTable[-1]
+  test[test < i] <- 0
+  assign(paste("GF_asvTable_low_cut_",i,"_0", sep = ""), test)
+  # write.table(test, file = paste("GF_asvTable_low_cut_",i,"_0.txt", sep = ""), sep = "\t", quote = F) 
+  
+  # Create table where all empty rows are removed
+  no_empty_rows_or_singles <- test[rowSums(test) > 1,]
+  assign(paste("GF_asvTable_low_cut_",i,"_no_empty", sep = ""), no_empty_rows_or_singles)
+  # write.table(no_empty_rows_or_singles, file = paste("GF_asvTable_low_cut_",i,"_no_empty_0.txt", sep = ""), sep = "\t", quote = F) 
+
+  
+  # Create table where all counts below the treshold is NA
+  test[test == 0] <- NA
+  assign(paste("GF_asvTable_low_cut_",i,"_NA", sep = ""), test)
+  # write.table(test, file = paste("GF_asvTable_low_cut_",i,"_NA.txt", sep = ""), sep = "\t", quote = F) 
+  
+  
+  # Create table where all empty rows are removed
+  no_empty_rows_or_singles <- test[rowSums(test, na.rm = TRUE) > 1,]
+  assign(paste("GF_asvTable_low_cut_",i,"_no_empty_NA", sep = ""), no_empty_rows_or_singles)
+  write.table(no_empty_rows_or_singles, file = paste("GF_asvTable_low_cut_",i,"_no_empty_NA.txt", sep = ""), sep = "\t", quote = F)
+
+  print(i)
+}
+```
+
+
+
